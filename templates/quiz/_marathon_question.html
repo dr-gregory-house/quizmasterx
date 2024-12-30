@@ -1,0 +1,10 @@
+<p class="mb-3">{{ question.question_text }}</p>
+<div class="d-grid gap-2">
+    <button type="button" class="btn answer-button" data-answer="a">A. {{ question.option_a }}</button>
+    <button type="button" class="btn answer-button" data-answer="b">B. {{ question.option_b }}</button>
+    <button type="button" class="btn answer-button" data-answer="c">C. {{ question.option_c }}</button>
+    <button type="button" class="btn answer-button" data-answer="d">D. {{ question.option_d }}</button>
+    {% if question.option_e %}
+    <button type="button" class="btn answer-button" data-answer="e">E. {{ question.option_e }}</button>
+    {% endif %}
+</div>

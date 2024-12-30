@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Marathon Mode - QuizMaster X{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card bg-dark text-light p-4">
+        <h4 class="mb-3">Marathon Mode <span id="timer" class="float-end"></span></h4>
+        <div id="question-container">
+            {% if question %}
+               {% include 'quiz/_marathon_question.html' %}
+            {% else %}
+                <p>No questions available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const timerDisplay = document.getElementById('timer');
+        const questionContainer = document.getElementById('question-container');
+        let answerButtons;
+        let correctAnswers = 0;
+        let timerInterval;
+        let timeLeft;
+        let currentQuestionId = {{ question.question_id if question else 'null' }};
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = Math.floor(timeLeft % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+        }
+
+        function endMarathon() {
+            clearInterval(timerInterval);
+            alert(`Marathon ended! Your score: ${correctAnswers}`);
+            window.location.href = `/marathon_results?score=${correctAnswers}`;
+        }
+
+        function attachAnswerButtonListeners() {
+            answerButtons = questionContainer.querySelectorAll('.answer-button');
+
+            answerButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const selectedAnswer = this.getAttribute('data-answer');
+                    answerButtons.forEach(btn => btn.disabled = true);
+
+                    fetch('/quiz/check_answer', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            question_id: currentQuestionId,
+                            selected_answer: selectedAnswer,
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        answerButtons.forEach(btn => {
+                            if (btn.dataset.answer === data.correct_answer.toLowerCase()) {
+                                btn.classList.add('correct');
+                            }
+                            if (btn.dataset.answer === selectedAnswer && selectedAnswer !== data.correct_answer.toLowerCase()) {
+                                btn.classList.add('incorrect');
+                            }
+                        });
+
+                        if (data.is_correct) {
+                            correctAnswers++;
+                        }
+
+                        setTimeout(loadNextQuestion, 1500);
+                    })
+                    .catch(error => console.error("Error checking answer:", error));
+                });
+            });
+        }
+
+        function loadNextQuestion() {
+            fetch('/quiz/marathon_next_question')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.question_html) {
+                        questionContainer.innerHTML = data.question_html;
+                        currentQuestionId = data.question_id;
+                        attachAnswerButtonListeners();
+                    } else {
+                        questionContainer.innerHTML = '<p>No more questions available at the moment.</p>';
+                        endMarathon();
+                    }
+                })
+                .catch(error => console.error("Error loading next question:", error));
+        }
+
+        function fetchTimeLeft() {
+            fetch('/quiz/marathon_time_left')
+                .then(response => response.json())
+                .then(data => {
+                    timeLeft = Math.max(0, Math.round(data.time_left));
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        endMarathon();
+                    }
+                })
+                .catch(error => console.error("Error fetching time left:", error));
+        }
+
+        // Fetch the initial time left and start the timer
+        fetchTimeLeft();
+        timerInterval = setInterval(fetchTimeLeft, 1000);
+
+        // Load the first question
+        if (currentQuestionId !== null) {
+            attachAnswerButtonListeners();
+        }
+        loadNextQuestion();
+
+    });
+</script>
+{% endblock %}

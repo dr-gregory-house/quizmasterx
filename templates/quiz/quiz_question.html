@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}QuizMaster X - Question {{ session['current_question_index'] + 1 }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card bg-dark text-light p-4">
+        <h4 class="mb-3">Question {{ session['current_question_index'] + 1 }} of {{ session['quiz_questions']|length }}</h4>
+        <p class="mb-3">{{ question.question_text }}</p>
+        <div class="d-grid gap-2">
+            <button type="button" class="btn answer-button" data-answer="a">A. {{ question.option_a }}</button>
+            <button type="button" class="btn answer-button" data-answer="b">B. {{ question.option_b }}</button>
+            <button type="button" class="btn answer-button" data-answer="c">C. {{ question.option_c }}</button>
+            <button type="button" class="btn answer-button" data-answer="d">D. {{ question.option_d }}</button>
+            {% if question.option_e %}
+            <button type="button" class="btn answer-button" data-answer="e">E. {{ question.option_e }}</button>
+            {% endif %}
+        </div>
+        <div class="text-center mt-3">
+            <button id="submit-answer-btn" class="btn btn-primary" disabled>Submit Answer</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const answerButtons = document.querySelectorAll('.answer-button');
+        const submitButton = document.getElementById('submit-answer-btn');
+        let selectedAnswer = null;
+
+        answerButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove 'selected' class from any previously selected button
+                document.querySelectorAll('.answer-button.selected').forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedAnswer = this.getAttribute('data-answer');
+                submitButton.disabled = false;
+            });
+        });
+
+        submitButton.addEventListener('click', function() {
+            if (!selectedAnswer) {
+                alert('Please select an answer.');
+                return;
+            }
+
+            // Disable all answer buttons and submit button
+            answerButtons.forEach(btn => btn.disabled = true);
+            submitButton.disabled = true;
+
+            const questionId = {{ question.question_id }};
+            const correctAnswer = "{{ question.correct_answer }}".toLowerCase();
+
+            // Highlight correct and incorrect answers
+            answerButtons.forEach(button => {
+                const buttonAnswer = button.getAttribute('data-answer');
+                if (buttonAnswer === correctAnswer) {
+                    button.classList.add('correct');
+                } else if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                    button.classList.add('incorrect');
+                }
+            });
+
+            // Function to proceed to the next question or results
+            function proceed() {
+                const currentIndex = {{ session['current_question_index'] }};
+                const totalQuestions = {{ session['quiz_questions']|length }};
+                const nextQuestionUrl = "{{ next_question_url }}"; // Get the URL from Flask
+
+                if (currentIndex < totalQuestions - 1) {
+                    // Create a form and submit it to the next_question route
+                    const form = document.createElement('form');
+                    form.method = 'post';
+                    form.action = '/next_question';
+                    form.action = nextQuestionUrl; // Use the URL from Flask
+
+                    // Add the question_id and the selected answer as hidden inputs
+                    const questionIdInput = document.createElement('input');
+                    questionIdInput.type = 'hidden';
+                    questionIdInput.name = 'question_id';
+                    questionIdInput.value = {{ question.question_id}};
+                    form.appendChild(questionIdInput);
+
+                    const answerInput = document.createElement('input');
+                    answerInput.type = 'hidden';
+                    answerInput.name = 'selected_answer';
+                    answerInput.value = selectedAnswer;
+                    form.appendChild(answerInput);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                   } else {
+            window.location.href = "{{ url_for('quiz.quiz_results') }}"; // Use url_for for results
+                   }
+              }
+
+            // Proceed after a short delay (optional)
+            setTimeout(proceed, 1000); // Adjust delay as needed
+        });
+    });
+</script>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .answer-button.correct {
+        background-color: #28a745; /* Green */
+        color: white;
+    }
+
+    .answer-button.incorrect {
+        background-color: #dc3545; /* Red */
+        color: white;
+    }
+</style>
+{% endblock %}

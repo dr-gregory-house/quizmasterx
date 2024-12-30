@@ -1,0 +1,46 @@
+<!-- templates/admin/edit_question.html -->
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Edit Question - QuizMaster X{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Edit Question</h1>
+    <form method="POST" action="{{ url_for('admin.update_question', question_id=question.question_id) }}">
+        <div class="mb-3">
+            <label for="question_text" class="form-label">Question Text</label>
+            <textarea class="form-control" id="question_text" name="question_text" rows="3" required>{{ question.question_text }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="option_a" class="form-label">Option A</label>
+            <input type="text" class="form-control" id="option_a" name="option_a" value="{{ question.option_a }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="option_b" class="form-label">Option B</label>
+            <input type="text" class="form-control" id="option_b" name="option_b" value="{{ question.option_b }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="option_c" class="form-label">Option C</label>
+            <input type="text" class="form-control" id="option_c" name="option_c" value="{{ question.option_c }}">
+        </div>
+        <div class="mb-3">
+            <label for="option_d" class="form-label">Option D</label>
+            <input type="text" class="form-control" id="option_d" name="option_d" value="{{ question.option_d }}">
+        </div>
+        <div class="mb-3">
+            <label for="option_e" class="form-label">Option E</label>
+            <input type="text" class="form-control" id="option_e" name="option_e" value="{{ question.option_e }}">
+        </div>
+        <div class="mb-3">
+            <label for="correct_answer" class="form-label">Correct Answer</label>
+            <select class="form-select" id="correct_answer" name="correct_answer" required>
+                <option value="a" {% if question.correct_answer == 'a' %}selected{% endif %}>A</option>
+                <option value="b" {% if question.correct_answer == 'b' %}selected{% endif %}>B</option>
+                <option value="c" {% if question.correct_answer == 'c' %}selected{% endif %}>C</option>
+                <option value="d" {% if question.correct_answer == 'd' %}selected{% endif %}>D</option>
+                <option value="e" {% if question.correct_answer == 'e' %}selected{% endif %}>E</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Question</button>
+        <a href="{{ url_for('admin.manage_questions') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+{% endblock %}

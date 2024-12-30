@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}QuizMaster X - Your Adventure Awaits{% endblock %}
+
+{% block content %}
+    <div class="homepage-container">
+        <div id="welcome-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>Welcome to QuizMaster X!</h2>
+                <p>Explore different quiz modes to test your knowledge.</p>
+                </ul>
+                <button id="dismiss-modal">Got It!</button>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="dont-show-again">
+                    <label for="dont-show-again">Don't show this again</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div id="welcome-message" class="hidden">
+                {% if session.get('username') %}
+                    <h1>Welcome back, <span id="username">{{ session['username'] }}</span>!</h1>
+                    <p>User ID: <span id="user-id">{{ session['user_id'] }}</span></p>
+                {% else %}
+                    <h1>Level up your knowledge.</h1>
+                    <p>Step into the arena!</p>
+                {% endif %}
+            </div>
+
+            <div id="mode-selection" class="hidden">
+                <div class="mode-card" data-mode-url="{{ marathon_url }}">
+                    <i class="fas fa-infinity"></i>
+                    <h2>Marathon Mode</h2>
+                    <p>Endless questions. Infinite fun.</p>
+                </div>
+                <div class="mode-card" data-mode-url="{{ hardcore_url }}">
+                    <i class="fas fa-bolt"></i>
+                    <h2>Hardcore Mode</h2>
+                    <p>Intense. Fast-paced. Legendary.</p>
+                </div>
+                <div class="mode-card" data-mode-url="{{ review_url }}">
+                    <i class="fas fa-book-open"></i>
+                    <h2>Review Mode</h2>
+                    <p>Master every detail. Perfection awaits.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="countdown" class="hidden">
+            <span id="countdown-number">3</span>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const welcomeModal = document.getElementById('welcome-modal');
+        const dismissModalBtn = document.getElementById('dismiss-modal');
+        const dontShowAgainCheckbox = document.getElementById('dont-show-again');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const modeSelection = document.getElementById('mode-selection');
+        const modeCards = document.querySelectorAll('.mode-card');
+        const countdownDiv = document.getElementById('countdown');
+        const countdownNumberSpan = document.getElementById('countdown-number');
+        const closeModalBtn = welcomeModal.querySelector('.close-button');
+
+        const hasDismissedNotice = localStorage.getItem('dismissedNotice') === 'true';
+
+        if (!hasDismissedNotice) {
+            welcomeModal.style.display = 'flex';
+        } else {
+            welcomeMessage.classList.remove('hidden');
+            modeSelection.classList.remove('hidden');
+        }
+
+        function hideModalAndShowContent() {
+            welcomeModal.style.display = 'none';
+            welcomeMessage.classList.remove('hidden');
+            modeSelection.classList.remove('hidden');
+        }
+
+        dismissModalBtn.addEventListener('click', () => {
+            if (dontShowAgainCheckbox.checked) {
+                localStorage.setItem('dismissedNotice', 'true');
+            }
+            hideModalAndShowContent();
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            if (dontShowAgainCheckbox.checked) {
+                localStorage.setItem('dismissedNotice', 'true');
+            }
+            hideModalAndShowContent();
+        });
+
+        modeCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const modeUrl = this.getAttribute('data-mode-url');
+                modeSelection.classList.add('hidden');
+                countdownDiv.classList.remove('hidden');
+                let count = 3;
+                countdownNumberSpan.textContent = count;
+                const countdownInterval = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        countdownNumberSpan.textContent = count;
+                    } else if (count === 0) {
+                        countdownNumberSpan.textContent = 'Go!';
+                    } else {
+                        clearInterval(countdownInterval);
+                        window.location.href = modeUrl; // Redirect using the server-generated URL
+                    }
+                }, 1000);
+            });
+        });
+    });
+</script>
+{% endblock %}

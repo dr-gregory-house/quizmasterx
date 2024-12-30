@@ -1,0 +1,831 @@
+body {
+    font-family: 'Exo 2', sans-serif;
+    background-color: #121212;
+    color: #f0f0f0;
+    margin: 0;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+}
+
+#particles-js {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none; /* Add this line */
+}
+
+.navbar {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.navbar-brand {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: #66FCF1;
+    text-decoration: none;
+}
+
+.navbar-brand span {
+    color: #ff4d4d;
+}
+
+.nav-links a {
+    color: #45A29E;
+    text-decoration: none;
+    margin-left: 20px;
+    transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: #66FCF1;
+}
+
+main.container {
+    max-width: 1200px;
+    padding: 20px;
+    /*margin-top: 80px;*
+    /*display: flex;*/
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 80px;
+    position: relative; /* Ensure z-index works */
+    z-index: 5; /* Or a higher value if needed */
+}
+
+.homepage-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 80px); /* Adjust height for navbar */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.content-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Homepage Specific Styles */
+#welcome-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #1e1e1e;
+    padding: 40px;
+    border-radius: 8px;
+    text-align: left;
+    position: relative;
+    max-width: 600px;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#welcome-modal h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: #66FCF1;
+    margin-bottom: 20px;
+}
+
+#welcome-modal .mode-details {
+    margin-bottom: 15px;
+    padding-left: 20px;
+    border-left: 3px solid #45A29E;
+}
+
+#welcome-modal h3 {
+    font-family: 'Orbitron', sans-serif;
+    color: #f0f0f0;
+    margin-bottom: 5px;
+}
+
+#welcome-modal p {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+#dismiss-modal {
+    background-color: #66FCF1;
+    color: #121212;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+}
+
+#dismiss-modal:hover {
+    background-color: #45A29E;
+}
+
+.checkbox-container {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    color: #ccc;
+    font-size: 0.8rem;
+}
+
+#dont-show-again {
+    margin-right: 5px;
+}
+
+#welcome-message h1 {
+    font-family: 'Orbitron', sans-serif;
+    color: #66FCF1;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+#welcome-message p {
+    color: #45A29E;
+    font-size: 1.1rem;
+}
+
+#mode-selection {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding-bottom: 20px;
+}
+
+.mode-card {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 30px;
+    width: 200px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    flex: 0 0 auto; /* Don't shrink, don't grow, base size */
+}
+
+.mode-card i {
+    font-size: 2rem;
+    color: #66FCF1;
+    margin-bottom: 15px;
+}
+
+.mode-card h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: #f0f0f0;
+    margin-bottom: 10px;
+}
+
+.mode-card p {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.mode-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+#countdown {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #121212;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Orbitron', sans-serif;
+    color: #66FCF1;
+    font-size: 5rem;
+    z-index: 1001; /* Ensure it's on top */
+}
+
+/* Authentication Pages */
+.auth-container {
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    padding: 40px;
+    max-width: 500px;
+    margin: 100px auto;
+}
+
+.auth-container h1 {
+    font-family: 'Orbitron', sans-serif;
+    color: #66FCF1;
+    margin-bottom: 30px;
+}
+
+.auth-container .form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.auth-container label {
+    display: block;
+    color: #66FCF1;
+    margin-bottom: 5px;
+}
+
+.auth-container input[type="text"],
+.auth-container input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #45A29E;
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+    position: relative; /* or absolute */
+    z-index: 1000;
+}
+
+.auth-container button[type="submit"] {
+    background-color: #66FCF1;
+    color: #121212;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+.auth-container button[type="submit"]:hover {
+    background-color: #45A29E;
+}
+
+.auth-container p {
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+.auth-container p a {
+    color: #45A29E;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.auth-container p a:hover {
+    color: #66FCF1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Footer Styles */
+footer {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 0.8rem;
+    color: #666;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+footer p {
+    margin: 0;
+}
+
+footer .credits {
+    color: #888;
+    margin-top: 5px;
+}
+
+/* Homepage Specific Layout */
+.homepage-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 80px); /* Adjust for navbar height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 80px; /* Adjust padding to account for fixed navbar */
+}
+
+.content-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1; /* Ensure content is above particles */
+}
+
+/* Mode Selection Horizontal Scroll */
+#mode-selection {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding-bottom: 20px;
+    -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+}
+
+/* Add a subtle geometric pattern to the left side */
+main.container::before {
+    content: "";
+    position: absolute;
+    top: 100px;
+    left: 50px;
+    width: 300px;
+    height: 300px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%2345A29E' opacity='0.2' d='M0 100V0l50 50L0 100zM50 0l50 50L50 100V0z'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    z-index: 0;
+}
+
+
+@media (max-width: 720px) {
+    #mode-selection {
+        flex-direction: column;
+        overflow-x: hidden;
+        align-items: center;
+        gap: 20px; /* Slightly increased gap */
+        padding: 20px; /* Added padding around the container */
+    }
+
+    .mode-card {
+        width: 90%; /* Take up a bit less width with some side margin */
+        max-width: 400px;
+        margin-right: 0;
+        margin-bottom: 10px; /* Add bottom margin for visual separation */
+        border-radius: 12px; /* More rounded corners */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Smooth transitions */
+    }
+
+    .mode-card:hover,
+    .mode-card:focus {
+        transform: scale(1.03); /* Slight scale up on hover/focus */
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* More pronounced shadow */
+    }
+
+    /* Entrance Animation */
+    .mode-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Style the icons */
+    .mode-card i {
+        font-size: 2.5rem; /* Slightly larger icons */
+        margin-bottom: 15px;
+        transition: color 0.3s ease-in-out;
+    }
+
+    .mode-card:hover i,
+    .mode-card:focus i {
+        color: #80fff7; /* Lighter color on hover */
+    }
+
+    /* Improve text readability */
+    .mode-card h2 {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+
+    .mode-card p {
+        font-size: 1rem;
+        color: #ccc; /* Keep text subtle */
+    }
+}
+
+/* Quiz Styles */
+.quiz-container {
+    max-width: 800px;
+    margin: 80px auto;
+    padding: 20px;
+    background-color: #1e1e1e;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Apply Lato font to questions */
+.quiz-question {
+    font-family: 'Lato', sans-serif; /* Use Lato, with sans-serif as a fallback */
+    /* You can also adjust other font properties here if needed, like: */
+    font-weight: 400;  For bold 
+    font-size: 1.3rem; 
+    color: #bccfeb; 
+}
+
+.quiz-options {
+    list-style: none;
+    padding: 0;
+}
+
+.quiz-options li {
+    margin-bottom: 10px;
+}
+
+.quiz-options button {
+    width: 100%;
+    padding: 10px 20px;
+    border: 1px solid #45A29E;
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.quiz-options button:hover {
+    background-color: #45A29E;
+    color: #121212;
+}
+
+
+/* style.css */
+
+/* Existing styles... */
+
+.form-check-input {
+    /* Adjust the size and appearance of the radio button itself */
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.25em;
+    vertical-align: top;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    border: 1px solid #adb5bd;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 50%; /* Make it round */
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    /* Style when the radio button is checked */
+    background-color: #007bff; /* Example: Blue color when checked */
+    border-color: #007bff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23fff'/%3e%3c/svg%3e"); /* White dot inside */
+}
+
+.form-check-input:focus {
+    /* Style when the radio button is focused (e.g., by tabbing) */
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-check-label {
+    /* Style the label text next to the radio button */
+    margin-left: 0.5em;
+    cursor: pointer;
+}
+
+.form-check {
+    margin-bottom: 0.75rem; /* Add some spacing between options */
+}
+
+
+/* style.css */
+
+/* Ensure the particles canvas is behind other elements */
+#particles-js {
+    position: fixed; /* Keep it fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Place it behind other content */
+}
+
+/* Ensure your navbar and main content are above the particles */
+.navbar, .container, .homepage-container, .modal {
+    position: relative; /* Allows z-index to work */
+    z-index: 0; /* Or a higher value if needed */
+}
+
+.modal {
+    z-index: 1050; /* Ensure the modal is on top */
+}
+
+
+/* style.css */
+
+/* Existing styles... */
+
+/* style.css */
+
+/* Existing styles... */
+
+.answer-button {
+    background-color: #343a40; /* Dark background */
+    color: #fff; /* White text */
+    border: 1px solid #90EE90; /* Light Green border */
+    padding: 12px 24px; /* Slightly more padding */
+    margin-bottom: 0.75rem; /* More spacing */
+    text-align: center; /* Center the text */
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    width: 100%;
+    border-radius: 10px; /* Rounded corners */
+    font-size: 1rem; /* Adjust font size if needed */
+    cursor: pointer;
+    position: relative; /* Ensure z-index works */
+    z-index: 1; /* Or a value greater than the z-index of #particles-js */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.answer-button:hover {
+    background-color: #555b61; /* Slightly lighter dark on hover */
+}
+
+.answer-button.selected {
+    background-color: #ADD8E6; /* Light Blue background for selected */
+    color: #000; /* Dark text on selection */
+    border-color: #ADD8E6; /* Light Blue border for selected */
+    font-weight: bold; /* Make text bold when selected */
+}
+
+.answer-button:focus {
+    outline: none; /* Remove default focus outline */
+    box-shadow: 0 0 0 0.2rem rgba(173, 216, 230, 0.5); /* Light Blue focus shadow */
+}
+
+/* Responsive adjustments (example) */
+@media (max-width: 768px) {
+    .answer-button {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .answer-button {
+        font-size: 0.85rem;
+    }
+}
+
+/* Ensure buttons inside d-grid take full width */
+.d-grid > .btn {
+    width: 100%;
+}
+/* Existing styles... */
+
+.results-container {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.results-title {
+    color: #00bcd4; /* Example: Cyan color */
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+}
+
+.score-display {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.score-text {
+    color: #eee;
+    margin-right: 5px;
+}
+
+.score-value {
+    color: #90EE90; /* Light Green for the score */
+}
+
+.score-separator {
+    margin: 0 10px;
+    color: #ccc;
+}
+
+.total-questions {
+    color: #ccc;
+}
+
+.results-message p {
+    font-size: 1.2em;
+    color: #ddd;
+}
+
+.results-button {
+    padding: 12px 30px;
+    font-size: 1.1em;
+    background-color: #007bff; /* Example: Blue color */
+    border-color: #007bff;
+}
+
+.results-button:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .results-title {
+        font-size: 1.8em;
+    }
+    .score-display {
+        font-size: 1.5em;
+    }
+    .results-message p {
+        font-size: 1em;
+    }
+    .results-button {
+        font-size: 1em;
+    }
+}
+.answer-button.correct {
+    background-color: #28a745; /* Green */
+    color: white;
+}
+
+.answer-button.incorrect {
+    background-color: #dc3545; /* Red */
+    color: white;
+}
+
+/* Style the container for all flash messages */
+.flashes {
+    margin-bottom: 20px; /* Add some space below the messages */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Style individual alert messages */
+.alert {
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+/* Style success messages */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+/* Style error messages */
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+/* Style warning messages */
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffeeba;
+}
+
+/* Example: Change font weight of messages */
+.alert {
+    font-weight: bold;
+}
+
+/* style.css */
+
+
+
+/* Existing styles... */
+
+/* Styles for the difficulty selection buttons in review mode */
+#difficulty-selection button {
+    background-color: #1e1e1e; /* Dark background, consistent with cards */
+    color: #f0f0f0; /* Light text */
+    border: 1px solid #66FCF1; /* Highlight color border */
+    padding: 8px 16px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative; /* Ensure z-index works */
+    z-index: 1; /* Or any value greater than -1 */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+#difficulty-selection button:hover {
+    background-color: #66FCF1; /* Highlight color background on hover */
+    color: #121212; /* Dark text on hover */
+    border-color: #45A29E;
+}
+
+/* Ensure difficulty buttons maintain their size on focus after answer selection */
+#difficulty-selection button:focus {
+    outline: none; /* Remove the default focus outline */
+    box-shadow: none; /* Remove any box-shadow that might be increasing the size */
+    /* If you have a specific border on focus that's causing the issue, reset it here: */
+    /* border: 1px solid transparent;  Replace 'transparent' with your button's default border style if needed */
+}
+
+/* Specific styles for each difficulty level (optional) */
+#difficulty-selection button[onclick*="easy"] {
+    border-color: #28a745; /* Green for Easy */
+}
+
+#difficulty-selection button[onclick*="easy"]:hover {
+    background-color: #28a745;
+    color: white;
+}
+
+#difficulty-selection button[onclick*="medium"] {
+    border-color: #007bff; /* Blue for Medium */
+}
+
+#difficulty-selection button[onclick*="medium"]:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+#difficulty-selection button[onclick*="hard"] {
+    border-color: #ffc107; /* Yellow for Hard */
+    color: #white; /* Keep text dark for contrast */
+}
+
+#difficulty-selection button[onclick*="hard"]:hover {
+    background-color: #ffc107;
+}
+
+#difficulty-selection button[onclick*="wrong"] {
+    border-color: #dc3545; /* Red for Wrong */
+}
+
+#difficulty-selection button[onclick*="wrong"]:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+#review-mode #question-container { /* Specificity to avoid affecting other modes */
+    margin-bottom: -10px; /* Adjust the negative value to move it upwards. Experiment with different values */
+    position: relative; /* To allow relative positioning adjustments */
+    top: -10px; /* Optionally use top to fine-tune vertical positioning */
+}
+
+
+/* Move the entire review mode content upwards */
+#review-mode .quiz-container { /* Target the quiz-container specifically within review mode */
+    position: relative;
+    top: -80px; /* Adjust this value to move the entire block upwards. Experiment to find the sweet spot. */
+    /* You can also use margin-top with a negative value if preferred: */
+    /* margin-top: -30px; */
+}
+

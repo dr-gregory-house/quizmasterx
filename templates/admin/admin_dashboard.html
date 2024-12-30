@@ -1,0 +1,109 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Admin Dashboard - QuizMaster X{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <div class="row">
+      <div class="col-md-8">
+            <h2 class="mb-3">Users</h2>
+             <div class="table-responsive">
+                 <table class="table table-striped">
+                    <thead>
+                        <tr>
+                           <th>ID</th>
+                           <th>Username</th>
+                           <th>Status</th>
+                           <th>Last Activity</th>
+                           <th>Role</th>
+                           <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                       {% for user in users %}
+                           <tr>
+                              <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>
+                                 {% if user.is_active == 1 %}
+                                       <span class="text-success">Active</span>
+                                 {% else %}
+                                      <span class="text-danger">Inactive</span>
+                                 {% endif %}
+                                </td>
+                                <td>{{ user.last_activity }}</td>
+                                <td>{{ user.role }}</td>
+                                <td>
+                                    <form method="post" action="{{ url_for('admin.toggle_user_activation', user_id=user.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                         {% if user.is_active == 1 %}Deactivate{% else %}Activate{% endif %}
+                                         </button>
+                                    </form>
+                                      <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                      </form>
+                                </td>
+                            </tr>
+                          {% endfor %}
+                   </tbody>
+                 </table>
+             </div>
+        </div>
+
+      <div class="col-md-4">
+          <div class="card p-3 mb-3 shadow">
+              <h4 class="card-title">Quick Stats</h4>
+              <p class="card-text">Total Users: {{ total_users }}</p>
+           </div>
+            <div class="card p-3 mb-3 shadow">
+                   <h4 class="card-title">Pending Activation</h4>
+                     <ul class="list-group list-group-flush">
+                       {% if pending_users %}
+                           {% for user in pending_users %}
+                               <li class="list-group-item">
+                                  {{user.username}}
+                                     <form method="post" action="{{ url_for('admin.toggle_user_activation', user_id=user.id) }}" class="d-inline float-end">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
+                                     </form>
+                               </li>
+                            {% endfor %}
+                       {% else %}
+                        <li class="list-group-item">
+                                   No pending requests.
+                         </li>
+                        {% endif %}
+                    </ul>
+           </div>
+         <div class="card p-3 mb-3 shadow">
+                <h4 class="card-title">Active Users</h4>
+                 <ul class="list-group list-group-flush">
+                     {% if active_users %}
+                           {% for user in active_users %}
+                                <li class="list-group-item">{{ user.username }} - {{ user.last_activity }}</li>
+                           {% endfor %}
+                       {% else %}
+                       <li class="list-group-item">
+                                No active users.
+                        </li>
+                     {% endif %}
+                 </ul>
+         </div>
+         <div class="card p-3 mb-3 shadow">
+                <h4 class="card-title">Online Users (Last 5 mins)</h4>
+                 <ul class="list-group list-group-flush">
+                     {% if online_users %}
+                           {% for user in online_users %}
+                                <li class="list-group-item">{{ user.username }} - {{ user.last_activity }}</li>
+                           {% endfor %}
+                       {% else %}
+                       <li class="list-group-item">
+                                No users online in the last 5 minutes.
+                        </li>
+                     {% endif %}
+                 </ul>
+         </div>
+      </div>
+
+    </div>
+{% endblock %}

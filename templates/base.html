@@ -20,9 +20,6 @@
                 <a href="{{ url_for('main.hello') }}">Home</a>
                 {% if session.get('user_id') %}
                     <a href="{{ url_for('auth.logout') }}">Log Out</a>
-                {% else %}
-                    <a href="{{ url_for('auth.login') }}">Log In</a>
-                    <a href="{{ url_for('auth.register') }}">Register</a>
                 {% endif %}
             </div>
         </div>

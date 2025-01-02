@@ -26,7 +26,7 @@
         let correctAnswers = 0;
         let timerInterval;
         let timeLeft;
-        let currentQuestionId = {{ question.question_id if question else 'null' }};
+        let currentQuestionId = {% if question %}{{ question.question_id }}{% else %}null{% endif %};
 
         function updateTimerDisplay() {
             const minutes = Math.floor(timeLeft / 60);
@@ -113,12 +113,10 @@
         fetchTimeLeft();
         timerInterval = setInterval(fetchTimeLeft, 1000);
 
-        // Load the first question
+        // Only attach listeners if we have a question
         if (currentQuestionId !== null) {
             attachAnswerButtonListeners();
         }
-        loadNextQuestion();
-
     });
 </script>
 {% endblock %}

@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - QuizMaster X{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <h1 class="dashboard-title">Admin Dashboard</h1>
+    
+    <!-- Statistics Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <i class="fas fa-users"></i>
+            <h3>Total Guests</h3>
+            <p class="stat-number">{{ stats.total_guests }}</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-user-clock"></i>
+            <h3>Currently Active</h3>
+            <p class="stat-number">{{ stats.active_guests }}</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-clock"></i>
+            <h3>Avg. Session</h3>
+            <p class="stat-number">{{ stats.avg_session_duration }} min</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-tasks"></i>
+            <h3>Total Attempts</h3>
+            <p class="stat-number">{{ stats.total_quiz_attempts }}</p>
+        </div>
+    </div>
+
+    <!-- Guest List -->
+    <div class="section">
+        <h2 class="section-title">
+            <i class="fas fa-users"></i> Guest Sessions
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="inactive">Inactive</button>
+                <button class="filter-btn" data-filter="logged_out">Logged Out</button>
+            </div>
+        </h2>
+        
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Guest Name</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>Quiz Attempts</th>
+                        <th>Total Score</th>
+                        <th>Last Activity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for guest in guests %}
+                    <tr class="guest-row" data-status="{{ guest.status }}">
+                        <td>
+                            <div class="guest-name">
+                                {{ guest.display_name }}
+                                <small class="guest-id">{{ guest.guest_id }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ guest.status }}">
+                                {{ guest.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ guest.duration_minutes }} min</td>
+                        <td>
+                            <span class="attempts-badge">
+                                {{ guest.total_attempts }}
+                            </span>
+                        </td>
+                        <td>{{ guest.total_score }}</td>
+                        <td>{{ guest.last_activity }}</td>
+                        <td>
+                            <a href="{{ url_for('admin.guest_details', guest_id=guest.guest_id) }}" 
+                               class="action-button">
+                                <i class="fas fa-info-circle"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No guest sessions found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-dashboard {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.dashboard-title {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 2.5rem;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: rgba(25, 25, 35, 0.95);
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.stat-card i {
+    font-size: 2rem;
+    color: #ff6b6b;
+    margin-bottom: 1rem;
+}
+
+.stat-card h3 {
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    color: #ff6b6b;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.section {
+    background: rgba(25, 25, 35, 0.95);
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.section-title {
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.section-title i {
+    color: #ff6b6b;
+}
+
+.filter-buttons {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Exo 2', sans-serif;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.filter-btn.active {
+    background: #ff6b6b;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-table th {
+    background: rgba(255, 0, 0, 0.1);
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 600;
+}
+
+.guest-name {
+    display: flex;
+    flex-direction: column;
+}
+
+.guest-id {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    font-family: monospace;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background: rgba(46, 213, 115, 0.2);
+    color: #2ed573;
+}
+
+.status-inactive {
+    background: rgba(255, 71, 87, 0.2);
+    color: #ff4757;
+}
+
+.status-logged_out {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.attempts-badge {
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.action-button:hover {
+    background: rgba(255, 107, 107, 0.3);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 1200px) {
+    .filter-buttons {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-dashboard {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 0.75rem;
+    }
+}
+</style>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const guestRows = document.querySelectorAll('.guest-row');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Filter rows
+            const filter = button.dataset.filter;
+            guestRows.forEach(row => {
+                if (filter === 'all' || row.dataset.status === filter) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

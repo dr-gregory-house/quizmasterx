@@ -68,5 +68,12 @@ def set_user_role(conn=None):
         session['user_role'] = user['role'] if user else None
 
 
+@app.template_filter('datetime')
+def format_datetime(value):
+    if isinstance(value, str):
+        value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    return value
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

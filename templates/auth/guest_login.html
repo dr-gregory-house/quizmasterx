@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}QuizMaster X - Your Adventure Awaits{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box animate__animated animate__fadeIn">
+        <h2>Start Your Journey</h2>
+        <p class="guest-info">What should we call you?</p>
+        
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <input type="text" id="guest_name" name="guest_name" required 
+                       placeholder="Enter your display name" maxlength="30"
+                       pattern="[A-Za-z0-9\s]{3,30}" 
+                       title="3-30 characters, letters and numbers only"
+                       class="guest-input">
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="mode-button guest-button">
+                    <i class="fas fa-user-clock"></i> Begin Adventure
+                </button>
+            </div>
+        </form>
+        
+        <div class="guest-notice">
+            <p><i class="fas fa-clock"></i> Session expires in 30 minutes</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 150px);
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.auth-box {
+    background: rgba(25, 25, 35, 0.9);
+    padding: 40px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.auth-box h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+}
+
+.guest-info {
+    color: #a8b2d1;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    font-family: 'Exo 2', sans-serif;
+}
+
+.guest-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid rgba(52, 152, 219, 0.3);
+    border-radius: 25px;
+    font-size: 1.1rem;
+    transition: all 0.3s;
+    background: rgba(255, 255, 255, 0.05);
+    text-align: center;
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+}
+
+.guest-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.guest-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.2);
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mode-button.guest-button {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    width: 100%;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    margin-top: 1rem;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mode-button.guest-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    background: linear-gradient(135deg, #3498db, #2475a7);
+}
+
+.mode-button.guest-button i {
+    margin-right: 10px;
+}
+
+.guest-notice {
+    margin-top: 2rem;
+    color: #a8b2d1;
+    font-size: 0.9rem;
+    font-family: 'Exo 2', sans-serif;
+}
+
+.guest-notice i {
+    color: #3498db;
+    margin-right: 8px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %} 

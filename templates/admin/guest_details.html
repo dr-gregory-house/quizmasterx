@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Details - QuizMaster X{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="back-button">
+        <a href="{{ url_for('admin.dashboard') }}" class="action-button">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Guest Information -->
+    <div class="section guest-info-section">
+        <h1 class="section-title">
+            <i class="fas fa-user"></i> {{ guest.display_name }}
+        </h1>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Guest ID</label>
+                <code>{{ guest.guest_id }}</code>
+            </div>
+            <div class="info-item">
+                <label>IP Address</label>
+                <span>{{ guest.ip_address }}</span>
+            </div>
+            <div class="info-item">
+                <label>Started</label>
+                <span>{{ guest.start_time }}</span>
+            </div>
+            <div class="info-item">
+                <label>Last Active</label>
+                <span>{{ guest.last_activity }}</span>
+            </div>
+            <div class="info-item">
+                <label>Status</label>
+                <span class="status-badge {% if not guest.end_time %}status-active{% else %}status-completed{% endif %}">
+                    {{ "Active" if not guest.end_time else "Completed" }}
+                </span>
+            </div>
+            <div class="info-item">
+                <label>Browser</label>
+                <span class="user-agent">{{ guest.user_agent }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Attempts -->
+    <div class="section">
+        <h2 class="section-title">
+            <i class="fas fa-history"></i> Quiz Attempts
+            <span class="attempt-count">{{ attempts|length }} total</span>
+        </h2>
+
+        {% if attempts %}
+            {% for attempt in attempts %}
+            <div class="attempt-card">
+                <div class="attempt-header">
+                    <div class="attempt-mode">
+                        <i class="fas {% if attempt.quiz_mode == 'marathon' %}fa-infinity{% elif attempt.quiz_mode == 'hardcore' %}fa-bolt{% else %}fa-book{% endif %}"></i>
+                        {{ attempt.quiz_mode|title }} Mode
+                    </div>
+                    <div class="attempt-score">
+                        <span class="score-number">{{ attempt.score }}</span>
+                        <span class="score-total">/ {{ attempt.total_questions }}</span>
+                    </div>
+                </div>
+                
+                <div class="attempt-details">
+                    <div class="detail-item">
+                        <i class="fas fa-check"></i>
+                        {{ attempt.correct_answers }} correct
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-question"></i>
+                        {{ attempt.questions_answered }} answered
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-clock"></i>
+                        {{ ((attempt.end_time|datetime - attempt.start_time|datetime).total_seconds() / 60)|round(1) }} minutes
+                    </div>
+                </div>
+
+                <div class="questions-list">
+                    {% for question in attempts_details[attempt.attempt_id] %}
+                    <div class="question-item {% if question.is_correct %}correct{% else %}incorrect{% endif %}">
+                        <div class="question-text">{{ question.question_text }}</div>
+                        <div class="question-response">
+                            <span class="response-label">Answer:</span>
+                            <span class="selected-option">{{ question.selected_option }}</span>
+                            {% if not question.is_correct %}
+                            <span class="correct-option">
+                                (Correct: {{ question.correct_option }})
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-attempts">
+                <i class="fas fa-info-circle"></i>
+                No quiz attempts found for this guest
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.admin-dashboard {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.back-button {
+    margin-bottom: 2rem;
+}
+
+.section {
+    background: rgba(25, 25, 35, 0.95);
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.section-title {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-title i {
+    color: #ff6b6b;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.info-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+.info-item label {
+    display: block;
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Exo 2', sans-serif;
+}
+
+.info-item span, .info-item code {
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.user-agent {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.attempt-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.attempt-header {
+    background: rgba(255, 0, 0, 0.1);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.attempt-mode {
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.attempt-mode i {
+    color: #ff6b6b;
+}
+
+.attempt-score {
+    font-family: 'Orbitron', sans-serif;
+}
+
+.score-number {
+    color: #ff6b6b;
+    font-size: 1.5rem;
+}
+
+.score-total {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.attempt-details {
+    padding: 1rem;
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-item {
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-item i {
+    color: #ff6b6b;
+}
+
+.questions-list {
+    padding: 1rem;
+}
+
+.question-item {
+    padding: 1rem;
+    border-left: 3px solid;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.question-item.correct {
+    border-color: #2ed573;
+}
+
+.question-item.incorrect {
+    border-color: #ff4757;
+}
+
+.question-text {
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.question-response {
+    font-size: 0.9rem;
+}
+
+.response-label {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.selected-option {
+    color: #fff;
+}
+
+.correct-option {
+    color: #2ed573;
+    margin-left: 0.5rem;
+}
+
+.attempt-count {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: auto;
+}
+
+.no-attempts {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.no-attempts i {
+    font-size: 2rem;
+    color: #ff6b6b;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .admin-dashboard {
+        padding: 1rem;
+    }
+    
+    .attempt-details {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers for attempt cards to show/hide questions
+    const attemptCards = document.querySelectorAll('.attempt-card');
+    attemptCards.forEach(card => {
+        const questionsList = card.querySelector('.questions-list');
+        const header = card.querySelector('.attempt-header');
+        
+        // Initially hide questions
+        questionsList.style.display = 'none';
+        
+        header.addEventListener('click', () => {
+            const isHidden = questionsList.style.display === 'none';
+            questionsList.style.display = isHidden ? 'block' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

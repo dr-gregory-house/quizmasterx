@@ -84,14 +84,34 @@ def submit_answer():
 def marathon_mode():
     if 'marathon_start_time' not in session:
         session['marathon_start_time'] = datetime.now().timestamp()
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM questions WHERE flagged != ? ORDER BY RANDOM() LIMIT 1', ('yes',))
-    question = cursor.fetchone()
-    conn.close()
-    if question:
-        return render_template('quiz/marathon.html', question=question)
-    return "No unflagged questions available."
+        session['current_marathon_question'] = None
+        session.modified = True  # Ensure session is saved
+    
+    if session.get('current_marathon_question') is None:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM questions WHERE flagged != ? ORDER BY RANDOM() LIMIT 1', ('yes',))
+        question = cursor.fetchone()
+        conn.close()
+        
+        if question:
+            # Convert SQLite row to dictionary and store in session
+            question_dict = {
+                'question_id': question['question_id'],
+                'question_text': question['question_text'],
+                'option_a': question['option_a'],
+                'option_b': question['option_b'],
+                'option_c': question['option_c'],
+                'option_d': question['option_d'],
+                'option_e': question['option_e'] if 'option_e' in question.keys() else None,
+                'correct_answer': question['correct_answer']
+            }
+            session['current_marathon_question'] = question_dict
+            session.modified = True  # Ensure session is saved
+        else:
+            return "No unflagged questions available."
+    
+    return render_template('quiz/marathon.html', question=session['current_marathon_question'])
 
 @quiz_bp.route('/marathon_time_left')
 @login_required
@@ -111,9 +131,24 @@ def marathon_next_question():
     cursor.execute('SELECT * FROM questions WHERE flagged != ? ORDER BY RANDOM() LIMIT 1', ('yes',))
     question = cursor.fetchone()
     conn.close()
+    
     if question:
-        question_html = render_template('quiz/_marathon_question.html', question=question)
-        return jsonify({'question_html': question_html, 'question_id': question['question_id']})
+        # Convert SQLite row to dictionary and store in session
+        question_dict = {
+            'question_id': question['question_id'],
+            'question_text': question['question_text'],
+            'option_a': question['option_a'],
+            'option_b': question['option_b'],
+            'option_c': question['option_c'],
+            'option_d': question['option_d'],
+            'option_e': question['option_e'] if 'option_e' in question.keys() else None,
+            'correct_answer': question['correct_answer']
+        }
+        session['current_marathon_question'] = question_dict
+        session.modified = True  # Ensure session is saved
+        
+        question_html = render_template('quiz/_marathon_question.html', question=question_dict)
+        return jsonify({'question_html': question_html, 'question_id': question_dict['question_id']})
     return jsonify({'question_html': None})
 
 @quiz_bp.route('/check_answer', methods=['POST'])

@@ -4,32 +4,29 @@
 
 {% block content %}
     <div class="homepage-container">
-        <div id="welcome-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">×</span>
-                <h2>Welcome to QuizMaster X!</h2>
-                <p>Explore different quiz modes to test your knowledge.</p>
-                </ul>
-                <button id="dismiss-modal">Got It!</button>
-                <div class="checkbox-container">
-                    <input type="checkbox" id="dont-show-again">
-                    <label for="dont-show-again">Don't show this again</label>
-                </div>
-            </div>
-        </div>
-
         <div class="content-area">
-            <div id="welcome-message" class="hidden">
+            <div id="welcome-message">
                 {% if session.get('username') %}
                     <h1>Welcome back, <span id="username">{{ session['username'] }}</span>!</h1>
-                    <p>User ID: <span id="user-id">{{ session['user_id'] }}</span></p>
+                    {% if session.get('is_guest') %}
+                        <p class="guest-info">You are in guest mode. Enjoy exploring!</p>
+                    {% endif %}
                 {% else %}
-                    <h1>Level up your knowledge....</h1>
-                    <p>Step into the arena!</p>
+                    <div class="welcome-section">
+                        <h1>Level up your knowledge....</h1>
+                        <p>Step into the arena!</p>
+                        <div class="guest-login-section">
+                            <form action="{{ url_for('auth.guest_login') }}" method="get" class="guest-form">
+                                <button type="submit" class="mode-button guest-button">
+                                    <i class="fas fa-user-clock"></i> Start Your Journey
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 {% endif %}
             </div>
 
-            <div id="mode-selection" class="hidden">
+            <div id="mode-selection" {% if not session.get('username') %}class="hidden"{% endif %}>
                 <div class="mode-card" data-mode-url="{{ marathon_url }}">
                     <i class="fas fa-infinity"></i>
                     <h2>Marathon Mode</h2>
@@ -52,49 +49,58 @@
             <span id="countdown-number">3</span>
         </div>
     </div>
+
+    <style>
+    .welcome-section {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .guest-login-section {
+        margin-top: 2rem;
+    }
+    
+    .mode-button.guest-button {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .mode-button.guest-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+    
+    .mode-button.guest-button i {
+        margin-right: 10px;
+    }
+    
+    .guest-info {
+        color: #3498db;
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+    }
+    </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const welcomeModal = document.getElementById('welcome-modal');
-        const dismissModalBtn = document.getElementById('dismiss-modal');
-        const dontShowAgainCheckbox = document.getElementById('dont-show-again');
         const welcomeMessage = document.getElementById('welcome-message');
         const modeSelection = document.getElementById('mode-selection');
         const modeCards = document.querySelectorAll('.mode-card');
         const countdownDiv = document.getElementById('countdown');
         const countdownNumberSpan = document.getElementById('countdown-number');
-        const closeModalBtn = welcomeModal.querySelector('.close-button');
 
-        const hasDismissedNotice = localStorage.getItem('dismissedNotice') === 'true';
-
-        if (!hasDismissedNotice) {
-            welcomeModal.style.display = 'flex';
-        } else {
+        if (welcomeMessage) {
             welcomeMessage.classList.remove('hidden');
-            modeSelection.classList.remove('hidden');
         }
-
-        function hideModalAndShowContent() {
-            welcomeModal.style.display = 'none';
-            welcomeMessage.classList.remove('hidden');
-            modeSelection.classList.remove('hidden');
-        }
-
-        dismissModalBtn.addEventListener('click', () => {
-            if (dontShowAgainCheckbox.checked) {
-                localStorage.setItem('dismissedNotice', 'true');
-            }
-            hideModalAndShowContent();
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            if (dontShowAgainCheckbox.checked) {
-                localStorage.setItem('dismissedNotice', 'true');
-            }
-            hideModalAndShowContent();
-        });
 
         modeCards.forEach(card => {
             card.addEventListener('click', function() {
@@ -111,7 +117,7 @@
                         countdownNumberSpan.textContent = 'Go!';
                     } else {
                         clearInterval(countdownInterval);
-                        window.location.href = modeUrl; // Redirect using the server-generated URL
+                        window.location.href = modeUrl;
                     }
                 }, 1000);
             });

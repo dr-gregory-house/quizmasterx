@@ -22,3 +22,5 @@ steps:
       - 'europe-west4' # Changed to your region
 images:
   - '$_IMAGE_NAME:$COMMIT_SHA'
+options:
+  defaultLogsBucketBehavior: 'REGIONAL_USER_OWNED_BUCKET'

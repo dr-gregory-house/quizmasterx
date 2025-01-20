@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}QuizMaster X - Question {{ current_question }} of {{ total_questions }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card bg-dark text-light p-4">
+        <div class="progress mb-3" style="height: 5px;">
+            <div class="progress-bar bg-info" role="progressbar" 
+                 style="width: {{ (current_question / total_questions) * 100 }}%;" 
+                 aria-valuenow="{{ current_question }}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="{{ total_questions }}">
+            </div>
+        </div>
+        <h4 class="mb-3">Question {{ current_question }} of {{ total_questions }}</h4>
+        <p class="mb-3">{{ question.question_text }}</p>
+        <div class="d-grid gap-2">
+            <button type="button" class="btn answer-button" data-answer="a">A. {{ question.option_a }}</button>
+            <button type="button" class="btn answer-button" data-answer="b">B. {{ question.option_b }}</button>
+            <button type="button" class="btn answer-button" data-answer="c">C. {{ question.option_c }}</button>
+            <button type="button" class="btn answer-button" data-answer="d">D. {{ question.option_d }}</button>
+            {% if question.option_e %}
+            <button type="button" class="btn answer-button" data-answer="e">E. {{ question.option_e }}</button>
+            {% endif %}
+        </div>
+        <div class="text-center mt-3">
+            <button id="submit-answer-btn" class="btn btn-primary" disabled>Submit Answer</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const answerButtons = document.querySelectorAll('.answer-button');
+        const submitButton = document.getElementById('submit-answer-btn');
+        let selectedAnswer = null;
+
+        answerButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove 'selected' class from any previously selected button
+                document.querySelectorAll('.answer-button.selected').forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedAnswer = this.getAttribute('data-answer');
+                submitButton.disabled = false;
+            });
+        });
+
+        submitButton.addEventListener('click', function() {
+            if (!selectedAnswer) {
+                alert('Please select an answer.');
+                return;
+            }
+
+            // Disable all answer buttons and submit button
+            answerButtons.forEach(btn => btn.disabled = true);
+            submitButton.disabled = true;
+
+            const questionId = {{ question.question_id }};
+            const correctAnswer = "{{ question.correct_answer }}".toLowerCase();
+
+            // Highlight correct and incorrect answers
+            answerButtons.forEach(button => {
+                const buttonAnswer = button.getAttribute('data-answer');
+                if (buttonAnswer === correctAnswer) {
+                    button.classList.add('correct');
+                } else if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                    button.classList.add('incorrect');
+                }
+            });
+
+            // Function to proceed to the next question or results
+            function proceed() {
+                const nextQuestionUrl = "{{ next_question_url }}";
+
+                // Create a form and submit it to the next_question route
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = nextQuestionUrl;
+
+                const answerInput = document.createElement('input');
+                answerInput.type = 'hidden';
+                answerInput.name = 'selected_answer';
+                answerInput.value = selectedAnswer;
+                form.appendChild(answerInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+
+            // Proceed after a short delay
+            setTimeout(proceed, 1000);
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .answer-button {
+        background-color: #2c3e50;
+        color: white;
+        border: 1px solid #34495e;
+        margin-bottom: 10px;
+        padding: 15px;
+        text-align: left;
+        transition: all 0.3s ease;
+    }
+
+    .answer-button:hover {
+        background-color: #34495e;
+        transform: translateX(5px);
+    }
+
+    .answer-button.selected {
+        background-color: #3498db;
+        border-color: #2980b9;
+    }
+
+    .answer-button.correct {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .answer-button.incorrect {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #submit-answer-btn {
+        background-color: #3498db;
+        border: none;
+        padding: 10px 30px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    #submit-answer-btn:hover:not(:disabled) {
+        background-color: #2980b9;
+        transform: scale(1.05);
+    }
+
+    #submit-answer-btn:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}

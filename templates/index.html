@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}QuizMaster X - Learn and Review{% endblock %}
+
+{% block content %}
+    <div class="homepage-container">
+        <div class="content-area">
+            <div id="welcome-message">
+                {% if session.get('username') %}
+                    <h1>Welcome back, <span id="username">{{ session['username'] }}</span>!</h1>
+                    <p>Ready to continue learning?</p>
+                {% else %}
+                    <h1>Unlock your potential.</h1>
+                    <p>Start your learning journey!</p>
+                {% endif %}
+            </div>
+
+            <div id="feature-selection">
+                <div class="mode-card" data-mode-url="{{ review_url }}">
+                    <i class="fas fa-book-open"></i>
+                    <h2>Review Mode</h2>
+                    <p>Reinforce your knowledge. Master what you've learned.</p>
+                </div>
+                <div class="mode-card" data-mode-url="{{ url_for('main.study_mode') }}">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h2>Study Mode</h2>
+                    <p>Explore questions by topic. Deepen your understanding.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const featureCards = document.querySelectorAll('.mode-card');
+
+        featureCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const modeUrl = this.getAttribute('data-mode-url');
+                window.location.href = modeUrl;
+            });
+        });
+    });
+</script>
+{% endblock %}

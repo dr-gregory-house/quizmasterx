@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}QuizMaster X - Quiz Results{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="results-container card bg-dark text-light p-5 text-center">
+        <h2 class="results-title mb-4 animate__animated animate__fadeInDown">Quiz Results</h2>
+        <div class="score-display animate__animated animate__fadeIn">
+            <span class="score-text">Your Score:</span>
+            <span class="score-value">{{ score }}</span>
+            <span class="score-separator">/</span>
+            <span class="total-questions">{{ total_questions }}</span>
+        </div>
+        <div class="results-message mt-3 animate__animated animate__fadeInUp">
+            {% if score == total_questions %}
+                <p>Perfect score! You're a QuizMaster!</p>
+            {% elif score >= total_questions * 0.75 %}
+                <p>Excellent work! You know your stuff!</p>
+            {% elif score >= total_questions * 0.5 %}
+                <p>Good job! Keep practicing!</p>
+            {% else %}
+                <p>Nice try! You'll get there!</p>
+            {% endif %}
+        </div>
+        <div class="mt-4">
+            <a href="{{ url_for('main.hello') }}" class="btn btn-primary results-button animate__animated animate__pulse animate__infinite">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

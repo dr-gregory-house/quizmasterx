@@ -1,0 +1,42 @@
+/* --- START OF FILE quiz_results.css --- */
+
+body {
+    background-color: #f9fbe7; /* Light Yellow from your theme */
+}
+
+h1 {
+    color: #ffb300; /* Amber from your theme */
+}
+
+.results-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+p {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.score {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ad1457; /* Deep Pink from your theme */
+}
+
+.button-container {
+    margin-top: 20px;
+}
+
+button {
+    background-color: #9c27b0; /* Purple from your theme */
+    margin: 5px; /* Adding some spacing between buttons */
+}
+
+/* Add any styles specific to the quiz results page here */

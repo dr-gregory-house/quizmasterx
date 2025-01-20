@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Marathon Results - QuizMaster X{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="results-container card bg-dark text-light p-5 text-center">
+        <h2 class="results-title mb-4 animate__animated animate__fadeInDown">Marathon Results</h2>
+        <div class="score-display animate__animated animate__fadeIn">
+            <span class="score-text">Your Score:</span>
+            <span class="score-value">{{ score }}</span>
+        </div>
+        <div class="results-message mt-3 animate__animated animate__fadeInUp">
+            <p>You answered {{ score }} questions correctly in the Marathon!</p>
+        </div>
+        <div class="mt-4">
+            <a href="{{ url_for('main.hello') }}" class="btn btn-primary results-button animate__animated animate__pulse animate__infinite">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

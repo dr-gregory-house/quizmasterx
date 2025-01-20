@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}QuizMaster X - Hardcore Mode{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card bg-light p-4">
+        <h2 class="text-center mb-4">Select Number of Questions</h2>
+        <form action="{{ url_for('quiz.start_hardcore_quiz') }}" method="post">
+            <div class="mb-3">
+                <label for="num_questions" class="form-label">Number of Questions:</label>
+                <select class="form-select" id="num_questions" name="num_questions">
+                    <option value="10">10</option> <!-- Option for 10 questions -->
+                    <option value="25">25</option> <!-- Option for 25 questions -->
+                    <option value="50">50</option>  <!-- Option for 50 questions -->
+                    <option value="100">100</option> <!-- Option for 100 questions -->
+                </select>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Start Quiz</button> <!-- Button to submit the form and start the quiz -->
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

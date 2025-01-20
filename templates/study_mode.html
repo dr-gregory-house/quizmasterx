@@ -1,0 +1,208 @@
+<!-- templates/study_mode.html -->
+{% extends "base.html" %}
+
+{% block title %}Study Mode{% endblock %}
+
+{% block content %}
+    <style>
+        /* Styles specific to the Study Mode page */
+        .study-mode-container {
+            max-width: 800px;
+            margin: 80px auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .study-mode-container h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #66FCF1;
+            margin-bottom: 20px;
+        }
+
+        .study-mode-container p {
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        .study-mode-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .study-mode-container label {
+            color: #66FCF1;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .study-mode-container select,
+        .study-mode-container input[type="number"] {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #45A29E;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            width: 100%;
+            box-sizing: border-box; /* Include padding and border in the width */
+        }
+
+        .study-mode-container button[type="submit"] {
+            background-color: #66FCF1;
+            color: #121212;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .study-mode-container button[type="submit"]:hover {
+            background-color: #45A29E;
+        }
+
+        .study-mode-container a {
+            color: #45A29E;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            display: block;
+            margin-top: 20px;
+        }
+
+        .study-mode-container a:hover {
+            color: #66FCF1;
+        }
+
+        .topic-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .topic-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #f0f0f0;
+        }
+
+        .topic-checkbox input[type="checkbox"] {
+            accent-color: #66FCF1;
+            width: 18px;
+            height: 18px;
+        }
+
+        .number-questions-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #f0f0f0;
+        }
+
+        .radio-option input[type="radio"] {
+            accent-color: #66FCF1;
+            width: 18px;
+            height: 18px;
+        }
+
+        .custom-number {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .custom-number input[type="number"] {
+            width: 100px;
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+
+    <div class="study-mode-container">
+        <h1>Study by Topics</h1>
+        <p>Select one or more topics to explore questions:</p>
+        <form action="{{ url_for('quiz.start_topic_quiz') }}" method="post" id="studyForm" onsubmit="return validateForm()">
+            <div class="topic-checkboxes">
+                <div class="topic-checkbox">
+                    <input type="checkbox" id="all_topics" name="topics" value="all">
+                    <label for="all_topics">All Topics</label>
+                </div>
+                {% for topic in topics %}
+                    <div class="topic-checkbox">
+                        <input type="checkbox" id="topic_{{ loop.index }}" name="topics" value="{{ topic }}">
+                        <label for="topic_{{ loop.index }}">{{ topic }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+            <p id="topicError" class="error-message">Please select at least one topic.</p>
+
+            <div class="number-questions-container">
+                <div class="radio-option">
+                    <input type="radio" id="all_questions" name="question_option" value="all" checked>
+                    <label for="all_questions">All Available Questions</label>
+                </div>
+                <div class="radio-option custom-number">
+                    <input type="radio" id="custom_number" name="question_option" value="custom">
+                    <input type="number" id="num_questions" name="num_questions" value="10" min="1" disabled>
+                    <label for="num_questions">questions</label>
+                </div>
+            </div>
+            
+            <button type="submit">Start Studying</button>
+        </form>
+        <p><a href="{{ url_for('main.hello') }}">Back to Home</a></p>
+    </div>
+
+    <script>
+        // Handle the "All Topics" checkbox
+        document.getElementById('all_topics').addEventListener('change', function() {
+            const topicCheckboxes = document.querySelectorAll('input[name="topics"]');
+            topicCheckboxes.forEach(checkbox => {
+                if (checkbox !== this) {
+                    checkbox.checked = false;
+                    checkbox.disabled = this.checked;
+                }
+            });
+        });
+
+        // Handle the number of questions radio buttons
+        document.getElementById('all_questions').addEventListener('change', function() {
+            document.getElementById('num_questions').disabled = this.checked;
+        });
+
+        document.getElementById('custom_number').addEventListener('change', function() {
+            document.getElementById('num_questions').disabled = !this.checked;
+        });
+
+        // Form validation
+        function validateForm() {
+            const topicCheckboxes = document.querySelectorAll('input[name="topics"]:checked');
+            const topicError = document.getElementById('topicError');
+            
+            if (topicCheckboxes.length === 0) {
+                topicError.style.display = 'block';
+                return false;
+            }
+            
+            topicError.style.display = 'none';
+            return true;
+        }
+    </script>
+{% endblock %}

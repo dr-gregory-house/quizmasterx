@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Review Mode - QuizMaster X{% endblock %}
+
+{% block content %}
+    <div class="quiz-container" id="review-mode"> <!- - Add id="review-mode" here -->
+    <div class="quiz-container"> <!- - Add quiz-container for consistent layout -->
+        <h1 class="results-title text-center mb-4">Review Mode</h1> <!- - Use results-title for consistent heading -->
+        {% if message %}
+            <p class="alert alert-info">{{ message }}</p>
+        {% else %}
+            <div id="question-container" class="mb-4"> <!- - Add mb-4 for spacing -->
+                <h2 class="quiz-question">{{ question.question_text }}</h2> <!- - Use quiz-question for consistent question styling -->
+            </div>
+            <div class="d-grid gap-2"> <!- - Use d-grid for layout -->
+                <button class="answer-button" onclick="checkAnswer('a', '{{ question.correct_answer }}', {{ question.question_id }})">A: {{ question.option_a }}</button>
+                <button class="answer-button" onclick="checkAnswer('b', '{{ question.correct_answer }}', {{ question.question_id }})">B: {{ question.option_b }}</button>
+                <button class="answer-button" onclick="checkAnswer('c', '{{ question.correct_answer }}', {{ question.question_id }})">C: {{ question.option_c }}</button>
+                <button class="answer-button" onclick="checkAnswer('d', '{{ question.correct_answer }}', {{ question.question_id }})">D: {{ question.option_d }}</button>
+                {% if question.option_e %}
+                    <button class="answer-button" onclick="checkAnswer('e', '{{ question.correct_answer }}', {{ question.question_id }})">E: {{ question.option_e }}</button>
+                {% endif %}
+            </div>
+            <div id="difficulty-selection" class="mt-4 text-center">
+                <p>How difficult was this question?</p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <button class="btn difficulty-button easy" onclick="submitReview('easy', {{ question.question_id }})">Easy</button>
+                    <button class="btn difficulty-button medium" onclick="submitReview('medium', {{ question.question_id }})">Medium</button>
+                    <button class="btn difficulty-button hard" onclick="submitReview('hard', {{ question.question_id }})">Hard</button>
+                    <button class="btn difficulty-button wrong" onclick="submitReview('wrong', {{ question.question_id }})">I was wrong</button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let correctAnswerGlobal = '';
+
+    function checkAnswer(selectedOption, correctAnswer, questionId) {
+        correctAnswerGlobal = correctAnswer.toLowerCase();
+        const options = document.querySelectorAll('.answer-button');
+        options.forEach(option => {
+            option.disabled = true;
+            option.onclick = null;
+            const optionLetter = option.textContent.charAt(0).toLowerCase();
+            if (optionLetter === correctAnswerGlobal) {
+                option.classList.add('correct');
+            }
+            if (optionLetter === selectedOption && selectedOption !== correctAnswerGlobal) {
+                option.classList.add('incorrect');
+            }
+        });
+        document.getElementById('difficulty-selection').style.display = 'flex';
+    }
+
+    function submitReview(difficulty, questionId) {
+        fetch('/review/submit_review', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                question_id: questionId,
+                difficulty: difficulty
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                setTimeout(() => {
+                    window.location.href = '/review';
+                }, 1000);
+            } else {
+                alert('Error submitting review.');
+            }
+        });
+    }
+</script>
+{% endblock %}

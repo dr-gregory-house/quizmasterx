@@ -1,0 +1,43 @@
+/* review.css */
+
+/* Target the specific container of the review mode to increase specificity */
+#question-container .options .option-button {
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    display: block;
+    text-align: left;
+    background-color: #f9f9f9; /* Add a default background color */
+    color: #333; /* Add a default text color */
+    transition: background-color 0.3s ease; /* Add a smooth transition for hover effect */
+}
+
+#question-container .options .option-button:hover {
+    background-color: #eee; /* Slightly darker background on hover */
+}
+
+#question-container .options .option-button.correct {
+    background-color: #aaffaa; /* Light green */
+    color: #000;
+}
+
+#question-container .options .option-button.incorrect {
+    background-color: #ffaaaa; /* Light red */
+    color: #000;
+}
+
+.difficulty-selection button {
+    margin: 5px;
+    padding: 8px 12px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #eee;
+    color: #333;
+    transition: background-color 0.3s ease; /* Add transition for hover effect */
+}
+
+.difficulty-selection button:hover {
+    background-color: #ddd;
+}

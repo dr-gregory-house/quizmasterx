@@ -1,0 +1,51 @@
+/* static/auth.css */
+.flashes {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1em;
+}
+
+.flashes li {
+    padding: 0.5em;
+    border-radius: 5px;
+}
+
+.flashes li.error {
+    background-color: #ffe0e0;
+    border: 1px solid #ffb3b3;
+    color: #cc0000;
+}
+
+.flashes li.success {
+    background-color: #e0ffea;
+    border: 1px solid #b3ffcc;
+    color: #00cc44;
+}
+
+form label {
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+form input[type="text"],
+form input[type="password"] {
+    width: 100%;
+    padding: 0.7em;
+    margin-bottom: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+form button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 0.8em 1.5em;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+form button[type="submit"]:hover {
+    background-color: #0056b3;
+}

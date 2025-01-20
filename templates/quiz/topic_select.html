@@ -1,0 +1,23 @@
+<!-- templates/quiz/topic_select.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Select a Topic for your Quiz</h2>
+    <form action="{{ url_for('quiz.start_topic_quiz') }}" method="post">
+        <div>
+            <label for="topic">Choose a Topic:</label>
+            <select name="topic" id="topic">
+                <option value="all">All Topics</option>
+                {% for topic in topics %}
+                    <option value="{{ topic }}">{{ topic }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="num_questions">Number of Questions:</label>
+            <input type="number" id="num_questions" name="num_questions" value="10" min="1">
+        </div>
+        <button type="submit">Start Quiz</button>
+    </form>
+    <p><a href="{{ url_for('main.hello') }}">Back to Home</a></p>
+{% endblock %}

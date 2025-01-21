@@ -212,6 +212,39 @@ def next_question():
 def quiz_results():
     score = request.args.get('score', 0, type=int)
     total = request.args.get('total', 0, type=int)
+    topics = request.args.get('topics', '', type=str).split(',')
+    time_taken = request.args.get('time_taken', 0, type=int)
+    user_id = session.get('user_id')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Update quiz history
+        for topic in topics:
+            if topic.strip():  # Only process non-empty topics
+                cursor.execute("""
+                    INSERT INTO user_quiz_history 
+                    (user_id, quiz_date, topic, score, total_questions, time_taken)
+                    VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?)
+                """, (user_id, topic, score, total, time_taken))
+
+        # Update daily stats
+        today = datetime.now().date()
+        cursor.execute("""
+            INSERT INTO user_daily_stats (user_id, date, questions_attempted, questions_correct)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id, date) DO UPDATE SET
+                questions_attempted = questions_attempted + ?,
+                questions_correct = questions_correct + ?
+        """, (user_id, today, total, score, total, score))
+
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating statistics: {e}")
+    finally:
+        conn.close()
+
     return render_template('quiz/quiz_results.html', score=score, total=total)
 
 @quiz_bp.route('/submit_answer', methods=['POST'])
@@ -227,72 +260,88 @@ def check_answer():
     selected_answer = data.get('selected_answer')
     user_id = session.get('user_id')
     
-    print(f"\n=== CHECK ANSWER DEBUG ===")
-    print(f"User ID: {user_id}")
-    print(f"Question ID: {question_id}")
-    print(f"Selected Answer: {selected_answer}")
-    
     if not question_id or not selected_answer or not user_id:
-        print("Invalid request - missing data")
         return jsonify({'error': 'Invalid request'}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    question = cursor.execute('SELECT correct_answer FROM questions WHERE question_id = ?', (question_id,)).fetchone()
+    
+    # Get question details including topic
+    cursor.execute('SELECT correct_answer, topic FROM questions WHERE question_id = ?', (question_id,))
+    question = cursor.fetchone()
     
     if not question:
-        print("Question not found in database")
         conn.close()
         return jsonify({'error': 'Question not found'}), 404
 
     correct_answer = question['correct_answer'].lower()
     is_correct = selected_answer.lower() == correct_answer
-    print(f"Correct Answer: {correct_answer}")
-    print(f"Is Answer Correct: {is_correct}")
+    topic = question['topic']
 
-    if not is_correct:
-        now = datetime.now()
-        print("\nAnswer is incorrect - updating SM2 data")
-        
-        # Update performance tracking
+    try:
+        # Update topic statistics
         cursor.execute("""
-            INSERT INTO user_question_performance (user_id, question_id, incorrect_attempts, last_attempt_date)
-            VALUES (?, ?, 1, ?)
-            ON CONFLICT(user_id, question_id) DO UPDATE SET
-                incorrect_attempts = incorrect_attempts + 1,
-                last_attempt_date = ?
-        """, (user_id, question_id, now, now))
+            INSERT INTO user_topic_stats (user_id, topic, total_questions, correct_answers, last_attempt_date)
+            VALUES (?, ?, 1, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id, topic) DO UPDATE SET
+                total_questions = total_questions + 1,
+                correct_answers = CASE WHEN ? THEN correct_answers + 1 ELSE correct_answers END,
+                last_attempt_date = CURRENT_TIMESTAMP
+        """, (user_id, topic, 1 if is_correct else 0, is_correct))
 
-        # Initialize or update SM-2 parameters
-        next_practice = now + timedelta(minutes=1)  # Start with 1-minute interval for wrong answers
-        print(f"Setting next practice date to: {next_practice}")
-        
-        cursor.execute("""
-            INSERT INTO sm2_data 
-            (user_id, question_id, easiness_factor, repetitions, interval, next_practice_date) 
-            VALUES (?, ?, 2.5, 0, 1, ?)
-            ON CONFLICT(user_id, question_id) DO UPDATE SET
-                easiness_factor = 2.5,
-                repetitions = 0,
-                interval = 1,
-                next_practice_date = ?
-        """, (user_id, question_id, next_practice, next_practice))
-        
-        # Verify the data was inserted/updated
-        cursor.execute("SELECT * FROM sm2_data WHERE user_id = ? AND question_id = ?", (user_id, question_id))
-        sm2_data = cursor.fetchone()
-        if sm2_data:
-            print("\nSM2 data after update:")
-            print(f"Next Practice Date: {sm2_data['next_practice_date']}")
-            print(f"Interval: {sm2_data['interval']}")
-            print(f"Repetitions: {sm2_data['repetitions']}")
+        # Update weakness score
+        if not is_correct:
+            cursor.execute("""
+                INSERT INTO user_weak_topics (user_id, topic, weakness_score, last_updated)
+                VALUES (?, ?, 0.8, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, topic) DO UPDATE SET
+                    weakness_score = MIN(1.0, (user_weak_topics.weakness_score + 0.1)),
+                    last_updated = CURRENT_TIMESTAMP
+            """, (user_id, topic))
         else:
-            print("Warning: SM2 data not found after insert/update")
+            cursor.execute("""
+                INSERT INTO user_weak_topics (user_id, topic, weakness_score, last_updated)
+                VALUES (?, ?, 0.4, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, topic) DO UPDATE SET
+                    weakness_score = MAX(0.0, (user_weak_topics.weakness_score - 0.05)),
+                    last_updated = CURRENT_TIMESTAMP
+            """, (user_id, topic))
 
-    conn.commit()
-    conn.close()
-    print("=== END CHECK ANSWER DEBUG ===\n")
-    return jsonify({'is_correct': is_correct, 'correct_answer': correct_answer})
+        # Update daily statistics
+        today = datetime.now().date()
+        cursor.execute("""
+            INSERT INTO user_daily_stats (user_id, date, questions_attempted, questions_correct)
+            VALUES (?, ?, 1, ?)
+            ON CONFLICT(user_id, date) DO UPDATE SET
+                questions_attempted = questions_attempted + 1,
+                questions_correct = CASE WHEN ? THEN questions_correct + 1 ELSE questions_correct END
+        """, (user_id, today, 1 if is_correct else 0, is_correct))
+
+        if not is_correct:
+            # Update SM2 data for wrong answers
+            next_practice = datetime.now() + timedelta(minutes=1)
+            cursor.execute("""
+                INSERT INTO sm2_data 
+                (user_id, question_id, easiness_factor, repetitions, interval, next_practice_date) 
+                VALUES (?, ?, 2.5, 0, 1, ?)
+                ON CONFLICT(user_id, question_id) DO UPDATE SET
+                    easiness_factor = 2.5,
+                    repetitions = 0,
+                    interval = 1,
+                    next_practice_date = ?
+            """, (user_id, question_id, next_practice, next_practice))
+
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating statistics: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
+    return jsonify({
+        'is_correct': is_correct,
+        'correct_answer': correct_answer
+    })
 
 @quiz_bp.route('/question/<int:question_id>')
 @login_required

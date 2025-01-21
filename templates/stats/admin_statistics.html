@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Statistics - QuizMaster X{% endblock %}
+
+{% block additional_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<style>
+    .stats-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    .mini-chart {
+        height: 200px;
+    }
+    .table th {
+        background-color: #f8f9fc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Admin Statistics Dashboard</h1>
+
+    <!-- Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Total Users</h5>
+                <h3>{{ total_users }}</h3>
+                <div class="mini-chart">
+                    <canvas id="userStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Total Quizzes Taken</h5>
+                <h3>{{ total_quizzes }}</h3>
+                <div class="mini-chart">
+                    <canvas id="quizTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Average Score</h5>
+                <h3>{{ "%.1f"|format(avg_score) }}%</h3>
+                <div class="mini-chart">
+                    <canvas id="scoreDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Active Today</h5>
+                <h3>{{ active_today }}</h3>
+                <div class="mini-chart">
+                    <canvas id="activeUsersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Daily Activity Chart -->
+        <div class="col-md-8">
+            <div class="stats-card">
+                <h4>Daily Activity Overview</h4>
+                <div class="chart-container">
+                    <canvas id="dailyActivityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topic Distribution -->
+        <div class="col-md-4">
+            <div class="stats-card">
+                <h4>Topic Distribution</h4>
+                <div class="chart-container">
+                    <canvas id="topicDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Quiz History -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="stats-card">
+                <h4>Recent Quiz History</h4>
+                <div class="chart-container mb-4">
+                    <canvas id="quizHistoryChart"></canvas>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Topic</th>
+                                <th>Score</th>
+                                <th>Time Taken</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quiz in quiz_history %}
+                            <tr>
+                                <td>{{ quiz.quiz_date }}</td>
+                                <td>{{ quiz.username }}</td>
+                                <td>{{ quiz.topic }}</td>
+                                <td>{{ quiz.score }}/{{ quiz.total_questions }}</td>
+                                <td>{{ quiz.time_taken }} seconds</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Performance -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="stats-card">
+                <h4>User Performance Overview</h4>
+                <div class="chart-container">
+                    <canvas id="userPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+// User Status Chart (Active vs Inactive)
+new Chart(document.getElementById('userStatusChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Active', 'Inactive'],
+        datasets: [{
+            data: [{{ active_users }}, {{ total_users - active_users }}],
+            backgroundColor: ['#28a745', '#dc3545']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Quiz Trend Chart
+new Chart(document.getElementById('quizTrendChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: {{ daily_stats|map(attribute='date')|list|tojson }},
+        datasets: [{
+            label: 'Quizzes',
+            data: {{ daily_stats|map(attribute='quiz_count')|list|tojson }},
+            borderColor: 'rgba(75, 192, 192, 1)',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Score Distribution Chart
+new Chart(document.getElementById('scoreDistributionChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+        datasets: [{
+            data: {{ score_distribution|tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Active Users Chart
+new Chart(document.getElementById('activeUsersChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: {{ daily_stats|map(attribute='date')|list|reverse|tojson }},
+        datasets: [{
+            label: 'Active Users',
+            data: {{ daily_stats|map(attribute='active_users')|list|reverse|tojson }},
+            borderColor: 'rgba(75, 192, 192, 1)',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Daily Activity Chart
+new Chart(document.getElementById('dailyActivityChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: {{ daily_stats|map(attribute='date')|list|tojson }},
+        datasets: [{
+            label: 'Questions Attempted',
+            data: {{ daily_stats|map(attribute='questions_attempted')|list|tojson }},
+            borderColor: 'rgba(75, 192, 192, 1)',
+            tension: 0.1,
+            fill: false
+        }, {
+            label: 'Questions Correct',
+            data: {{ daily_stats|map(attribute='questions_correct')|list|tojson }},
+            borderColor: 'rgba(54, 162, 235, 1)',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Topic Distribution Chart
+new Chart(document.getElementById('topicDistributionChart').getContext('2d'), {
+    type: 'pie',
+    data: {
+        labels: {{ topic_stats|map(attribute='topic')|list|tojson }},
+        datasets: [{
+            data: {{ topic_stats|map(attribute='quiz_count')|list|tojson }},
+            backgroundColor: [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                '#858796', '#5a5c69', '#2c9faf', '#3c5a9a', '#e83e8c'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            datalabels: {
+                formatter: (value, ctx) => {
+                    let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    let percentage = (value * 100 / sum).toFixed(1) + "%";
+                    return percentage;
+                },
+                color: '#fff'
+            }
+        }
+    }
+});
+
+// Quiz History Chart
+new Chart(document.getElementById('quizHistoryChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: {{ quiz_history|map(attribute='quiz_date')|list|tojson }},
+        datasets: [{
+            label: 'Score %',
+            data: {{ quiz_history|map(attribute='score_percentage')|list|tojson }},
+            borderColor: 'rgba(75, 192, 192, 1)',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+
+// User Performance Chart
+new Chart(document.getElementById('userPerformanceChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: {{ user_performance|map(attribute='username')|list|tojson }},
+        datasets: [{
+            label: 'Average Score %',
+            data: {{ user_performance|map(attribute='avg_score')|list|tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        },
+        plugins: {
+            datalabels: {
+                anchor: 'end',
+                align: 'top',
+                formatter: Math.round
+            }
+        }
+    }
+});
+</script>
+{% endblock %} 

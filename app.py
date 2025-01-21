@@ -10,6 +10,7 @@ from quiz.routes import quiz_bp
 from review.routes import review_bp
 from main.routes import main_bp
 from admin.routes import admin_bp
+from stats.routes import stats_bp
 from utils import get_db_connection
 
 app = Flask(__name__)
@@ -21,6 +22,7 @@ app.register_blueprint(quiz_bp, url_prefix='/quiz')
 app.register_blueprint(review_bp, url_prefix='/review')
 app.register_blueprint(main_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(stats_bp)
 
 def with_db_connection(f):
     @wraps(f)

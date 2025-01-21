@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request, flash
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash, jsonify
 from functools import wraps
 from utils import get_db_connection
 from datetime import datetime, timedelta
@@ -22,18 +22,35 @@ def admin_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Get all users
-    cursor.execute("SELECT id, username, is_active, last_activity, role FROM users")
+    # Get all users with formatted last_activity
+    cursor.execute("""
+        SELECT id, username, is_active, 
+               strftime('%Y-%m-%d %H:%M', last_activity) as last_activity, 
+               role 
+        FROM users
+    """)
     users = cursor.fetchall()
 
     # Get active users (users with any last_activity)
-    cursor.execute("SELECT id, username, last_activity from users WHERE last_activity IS NOT NULL ORDER BY last_activity DESC")
+    cursor.execute("""
+        SELECT id, username, 
+               strftime('%Y-%m-%d %H:%M', last_activity) as last_activity 
+        FROM users 
+        WHERE last_activity IS NOT NULL 
+        ORDER BY last_activity DESC
+    """)
     active_users = cursor.fetchall()
 
     # Get online users (last activity within the last 5 minutes)
     now = datetime.now()
     five_minutes_ago = now - timedelta(minutes=5)
-    cursor.execute("SELECT id, username, last_activity FROM users WHERE last_activity >= ? ORDER BY last_activity DESC", (five_minutes_ago,))
+    cursor.execute("""
+        SELECT id, username, 
+               strftime('%Y-%m-%d %H:%M', last_activity) as last_activity 
+        FROM users 
+        WHERE last_activity >= ? 
+        ORDER BY last_activity DESC
+    """, (five_minutes_ago,))
     online_users = cursor.fetchall()
 
     # Get total user counts
@@ -45,7 +62,12 @@ def admin_dashboard():
     pending_users = cursor.fetchall()
 
     conn.close()
-    return render_template('admin/admin_dashboard.html', users=users, active_users=active_users, online_users=online_users, total_users=total_users, pending_users=pending_users)
+    return render_template('admin/admin_dashboard.html', 
+                         users=users, 
+                         active_users=active_users, 
+                         online_users=online_users, 
+                         total_users=total_users, 
+                         pending_users=pending_users)
 
 @admin_bp.route('/users/<int:user_id>/toggle', methods=['POST'])
 @admin_required
@@ -61,28 +83,87 @@ def toggle_user_activation(user_id):
         cursor.execute("UPDATE users SET is_active = ? WHERE id = ?", (new_status, user_id))
         conn.commit()
         conn.close()
-        flash('User activation status has been changed successfully', 'success')
+        return jsonify({
+            'success': True,
+            'message': 'User activation status has been changed successfully'
+        })
     else:
         conn.close()
-        flash('User not found', 'error')
-
-    return redirect(url_for('admin.admin_dashboard'))
+        return jsonify({
+            'success': False,
+            'message': 'User not found'
+        }), 404
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
 @admin_required
 def delete_user(user_id):
     """Handles delete user request."""
+    if user_id == session.get('user_id'):
+        return jsonify({
+            'success': False,
+            'message': 'You cannot delete your own account'
+        }), 400
+
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-         cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-         conn.commit()
-         conn.close()
-         flash('User deleted successfully.', 'success')
+        # First check if user exists and is not an admin
+        cursor.execute("SELECT role FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': 'User not found'
+            }), 404
+        if user['role'] == 'admin':
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': 'Cannot delete admin users'
+            }), 400
+
+        # Delete user's data from related tables
+        tables = ['user_topic_stats', 'user_quiz_history', 'user_weak_topics', 
+                 'user_daily_stats', 'sm2_data', 'user_question_performance']
+        for table in tables:
+            cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
+
+        # Finally delete the user
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({
+            'success': True,
+            'message': 'User deleted successfully'
+        })
     except Exception as e:
-         conn.close()
-         flash(f'Error deleting user: {e}', 'error')
-    return redirect(url_for('admin.admin_dashboard'))
+        conn.close()
+        return jsonify({
+            'success': False,
+            'message': f'Error deleting user: {str(e)}'
+        }), 500
+
+@admin_bp.route('/users/<int:user_id>/make-admin', methods=['POST'])
+@admin_required
+def make_admin(user_id):
+    """Makes a user an admin."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE users SET role = 'admin' WHERE id = ?", (user_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({
+            'success': True,
+            'message': 'User has been made admin successfully'
+        })
+    except Exception as e:
+        conn.close()
+        return jsonify({
+            'success': False,
+            'message': f'Error making user admin: {str(e)}'
+        }), 500
 
 @admin_bp.route('/questions')
 @admin_required

@@ -1,0 +1,210 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}User Statistics - Admin Panel{% endblock %}
+
+{% block additional_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .stats-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .weak-topic {
+        background: #ffe0e0;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+    }
+    .progress {
+        height: 20px;
+        margin: 10px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Statistics for {{ user.username }}</h1>
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Total Questions</h5>
+                <h3>{{ topic_stats|sum(attribute='total_questions') }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Correct Answers</h5>
+                <h3>{{ topic_stats|sum(attribute='correct_answers') }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Average Accuracy</h5>
+                <h3>{{ avg_accuracy }}%</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <h5>Topics Covered</h5>
+                <h3>{{ topic_stats|length }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Topic Performance -->
+        <div class="col-md-8">
+            <div class="stats-card">
+                <h4>Topic Performance</h4>
+                <canvas id="topicChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Weak Topics -->
+        <div class="col-md-4">
+            <div class="stats-card">
+                <h4>Areas for Improvement</h4>
+                {% for topic in weak_topics %}
+                <div class="weak-topic">
+                    <h6>{{ topic.topic }}</h6>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" 
+                             role="progressbar" 
+                             style="width: {{ topic.weakness_score * 100 }}%">
+                            {{ "%.1f"|format(topic.weakness_score * 100) }}%
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz History -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="stats-card">
+                <h4>Quiz History</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Topic</th>
+                                <th>Score</th>
+                                <th>Time Taken</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quiz in quiz_history %}
+                            <tr>
+                                <td>{{ quiz.quiz_date }}</td>
+                                <td>{{ quiz.topic }}</td>
+                                <td>{{ quiz.score }}/{{ quiz.total_questions }}</td>
+                                <td>{{ quiz.time_taken }} seconds</td>
+                                <td>
+                                    {% set percentage = (quiz.score / quiz.total_questions * 100)|round %}
+                                    <div class="progress">
+                                        <div class="progress-bar {% if percentage >= 80 %}bg-success
+                                                                {% elif percentage >= 60 %}bg-info
+                                                                {% elif percentage >= 40 %}bg-warning
+                                                                {% else %}bg-danger{% endif %}"
+                                             role="progressbar"
+                                             style="width: {{ percentage }}%">
+                                            {{ percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Activity Chart -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="stats-card">
+                <h4>Daily Activity (Last 30 Days)</h4>
+                <canvas id="dailyActivityChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Topic Performance Chart
+const topicCtx = document.getElementById('topicChart').getContext('2d');
+new Chart(topicCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ topic_stats|map(attribute='topic')|list|tojson }},
+        datasets: [{
+            label: 'Accuracy (%)',
+            data: {{ topic_stats|map(attribute='accuracy')|list|tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+
+// Daily Activity Chart
+const dailyCtx = document.getElementById('dailyActivityChart').getContext('2d');
+new Chart(dailyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ daily_stats|map(attribute='date')|list|tojson }},
+        datasets: [{
+            label: 'Questions Attempted',
+            data: {{ daily_stats|map(attribute='questions_attempted')|list|tojson }},
+            borderColor: 'rgba(75, 192, 192, 1)',
+            tension: 0.1,
+            fill: false
+        }, {
+            label: 'Questions Correct',
+            data: {{ daily_stats|map(attribute='questions_correct')|list|tojson }},
+            borderColor: 'rgba(54, 162, 235, 1)',
+            tension: 0.1,
+            fill: false
+        }, {
+            label: 'Study Time (minutes)',
+            data: {{ daily_stats|map(attribute='study_time')|list|tojson }},
+            borderColor: 'rgba(255, 99, 132, 1)',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %} 

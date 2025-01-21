@@ -2,108 +2,175 @@
 
 {% block title %}Admin Dashboard - QuizMaster X{% endblock %}
 
+{% block additional_head %}
+<style>
+    .action-buttons {
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <h1 class="mb-4">Admin Dashboard</h1>
 
     <div class="row">
-      <div class="col-md-8">
+        <div class="col-md-8">
             <h2 class="mb-3">Users</h2>
-             <div class="table-responsive">
-                 <table class="table table-striped">
+            <div class="table-responsive">
+                <table class="table table-striped">
                     <thead>
                         <tr>
-                           <th>ID</th>
-                           <th>Username</th>
-                           <th>Status</th>
-                           <th>Last Activity</th>
-                           <th>Role</th>
-                           <th>Actions</th>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Status</th>
+                            <th>Last Activity</th>
+                            <th>Role</th>
+                            <th>Statistics</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                       {% for user in users %}
-                           <tr>
-                              <td>{{ user.id }}</td>
+                        {% for user in users %}
+                            <tr id="user-row-{{ user.id }}">
+                                <td>{{ user.id }}</td>
                                 <td>{{ user.username }}</td>
                                 <td>
-                                 {% if user.is_active == 1 %}
-                                       <span class="text-success">Active</span>
-                                 {% else %}
-                                      <span class="text-danger">Inactive</span>
-                                 {% endif %}
+                                    {% if user.is_active == 1 %}
+                                        <span class="text-success">Active</span>
+                                    {% else %}
+                                        <span class="text-warning">Pending</span>
+                                    {% endif %}
                                 </td>
-                                <td>{{ user.last_activity }}</td>
+                                <td>
+                                    {% if user.last_activity %}
+                                        {{ user.last_activity }}
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </td>
                                 <td>{{ user.role }}</td>
                                 <td>
-                                    <form method="post" action="{{ url_for('admin.toggle_user_activation', user_id=user.id) }}" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                         {% if user.is_active == 1 %}Deactivate{% else %}Activate{% endif %}
-                                         </button>
-                                    </form>
-                                      <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                      </form>
+                                    <a href="{{ url_for('stats.admin_user_statistics', target_user_id=user.id) }}" 
+                                       class="btn btn-info btn-sm">
+                                        View Stats
+                                    </a>
+                                </td>
+                                <td class="action-buttons">
+                                    {% if user.is_active == 1 %}
+                                        <button class="btn btn-warning btn-sm toggle-activation" data-user-id="{{ user.id }}">
+                                            Deactivate
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-success btn-sm toggle-activation" data-user-id="{{ user.id }}">
+                                            Activate
+                                        </button>
+                                    {% endif %}
+                                    {% if user.role != 'admin' %}
+                                        <button class="btn btn-warning btn-sm make-admin" data-user-id="{{ user.id }}">
+                                            Make Admin
+                                        </button>
+                                        <button class="btn btn-danger btn-sm delete-user" data-user-id="{{ user.id }}">
+                                            Delete
+                                        </button>
+                                    {% endif %}
                                 </td>
                             </tr>
-                          {% endfor %}
-                   </tbody>
-                 </table>
-             </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-      <div class="col-md-4">
-          <div class="card p-3 mb-3 shadow">
-              <h4 class="card-title">Quick Stats</h4>
-              <p class="card-text">Total Users: {{ total_users }}</p>
-           </div>
+        <div class="col-md-4">
             <div class="card p-3 mb-3 shadow">
-                   <h4 class="card-title">Pending Activation</h4>
-                     <ul class="list-group list-group-flush">
-                       {% if pending_users %}
-                           {% for user in pending_users %}
-                               <li class="list-group-item">
-                                  {{user.username}}
-                                     <form method="post" action="{{ url_for('admin.toggle_user_activation', user_id=user.id) }}" class="d-inline float-end">
-                                        <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
-                                     </form>
-                               </li>
-                            {% endfor %}
-                       {% else %}
-                        <li class="list-group-item">
-                                   No pending requests.
-                         </li>
-                        {% endif %}
-                    </ul>
-           </div>
-         <div class="card p-3 mb-3 shadow">
-                <h4 class="card-title">Active Users</h4>
-                 <ul class="list-group list-group-flush">
-                     {% if active_users %}
-                           {% for user in active_users %}
-                                <li class="list-group-item">{{ user.username }} - {{ user.last_activity }}</li>
-                           {% endfor %}
-                       {% else %}
-                       <li class="list-group-item">
-                                No active users.
-                        </li>
-                     {% endif %}
-                 </ul>
-         </div>
-         <div class="card p-3 mb-3 shadow">
+                <h4 class="card-title">Quick Stats</h4>
+                <p class="card-text">Total Users: {{ total_users }}</p>
+            </div>
+            <div class="card p-3 mb-3 shadow">
                 <h4 class="card-title">Online Users (Last 5 mins)</h4>
-                 <ul class="list-group list-group-flush">
-                     {% if online_users %}
-                           {% for user in online_users %}
-                                <li class="list-group-item">{{ user.username }} - {{ user.last_activity }}</li>
-                           {% endfor %}
-                       {% else %}
-                       <li class="list-group-item">
-                                No users online in the last 5 minutes.
-                        </li>
-                     {% endif %}
-                 </ul>
-         </div>
-      </div>
-
+                <ul class="list-group list-group-flush">
+                    {% if online_users %}
+                        {% for user in online_users %}
+                            <li class="list-group-item">{{ user.username }} - {{ user.last_activity }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item">No users online.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle user activation
+    document.querySelectorAll('.toggle-activation').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            fetch(`/admin/users/${userId}/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+        });
+    });
+
+    // Delete user
+    document.querySelectorAll('.delete-user').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                const userId = this.dataset.userId;
+                fetch(`/admin/users/${userId}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`user-row-${userId}`).remove();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        });
+    });
+
+    // Make admin
+    document.querySelectorAll('.make-admin').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to make this user an admin?')) {
+                const userId = this.dataset.userId;
+                fetch(`/admin/users/${userId}/make-admin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

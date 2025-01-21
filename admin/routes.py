@@ -206,3 +206,29 @@ def delete_question(question_id):
         conn.close()
         flash(f'Error deleting question: {e}', 'error')
     return redirect(url_for('admin.manage_questions'))
+
+@admin_bp.route('/online-users/<int:minutes>', methods=['GET'])
+@admin_required
+def get_online_users(minutes):
+    """Get online users based on time window"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    now = datetime.now()
+    time_ago = now - timedelta(minutes=minutes)
+    
+    cursor.execute("""
+        SELECT id, username, 
+               strftime('%Y-%m-%d %H:%M', last_activity) as last_activity 
+        FROM users 
+        WHERE last_activity >= ? 
+        ORDER BY last_activity DESC
+    """, (time_ago,))
+    online_users = cursor.fetchall()
+    
+    conn.close()
+    
+    return jsonify({
+        'users': [{'username': user['username'], 'last_activity': user['last_activity']} 
+                 for user in online_users]
+    })

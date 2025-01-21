@@ -15,7 +15,13 @@ from utils import get_db_connection
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_urlsafe(32)
-app.config['DATABASE'] = r"C:\Users\anubh\Desktop\quizmasterx\data\mcq_database.db"
+
+# Set up database path relative to the application root
+current_dir = os.path.dirname(os.path.abspath(__file__))
+app.config['DATABASE'] = os.path.join(current_dir, 'data', 'mcq_database.db')
+
+# Ensure the data directory exists
+os.makedirs(os.path.dirname(app.config['DATABASE']), exist_ok=True)
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(quiz_bp, url_prefix='/quiz')

@@ -16,16 +16,21 @@
             </div>
 
             <div id="feature-selection">
-                <div class="mode-card" data-mode-url="{{ review_url }}">
+                <a href="{{ url_for('review.review_mode') }}" class="mode-card">
                     <i class="fas fa-book-open"></i>
                     <h2>Review Mode</h2>
                     <p>Reinforce your knowledge. Master what you've learned.</p>
-                </div>
-                <div class="mode-card" data-mode-url="{{ url_for('main.study_mode') }}">
+                </a>
+                <a href="{{ url_for('main.study_mode') }}" class="mode-card">
                     <i class="fas fa-graduation-cap"></i>
                     <h2>Study Mode</h2>
                     <p>Explore questions by topic. Deepen your understanding.</p>
-                </div>
+                </a>
+                <a href="{{ url_for('stats.my_statistics') }}" class="mode-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>Statistics</h2>
+                    <p>Track your progress and analyze your performance.</p>
+                </a>
             </div>
         </div>
     </div>
@@ -34,12 +39,19 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const featureCards = document.querySelectorAll('.mode-card');
-
-        featureCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const modeUrl = this.getAttribute('data-mode-url');
-                window.location.href = modeUrl;
+        console.log('DOM Content Loaded');
+        const modeCards = document.querySelectorAll('.mode-card');
+        console.log('Found mode cards:', modeCards.length);
+        
+        modeCards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                console.log('Card clicked');
+                e.preventDefault(); // Prevent default link behavior
+                const url = this.getAttribute('href');
+                console.log('Navigating to:', url);
+                if (url) {
+                    window.location.href = url;
+                }
             });
         });
     });

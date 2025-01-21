@@ -87,8 +87,16 @@
                 <p class="card-text">Total Users: {{ total_users }}</p>
             </div>
             <div class="card p-3 mb-3 shadow">
-                <h4 class="card-title">Online Users (Last 5 mins)</h4>
-                <ul class="list-group list-group-flush">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="card-title mb-0">Online Users</h4>
+                    <select id="timeFilter" class="form-select" style="width: auto;">
+                        <option value="5">Last 5 minutes</option>
+                        <option value="30">Last 30 minutes</option>
+                        <option value="120">Last 2 hours</option>
+                        <option value="1440">Last 24 hours</option>
+                    </select>
+                </div>
+                <ul class="list-group list-group-flush" id="onlineUsersList">
                     {% if online_users %}
                         {% for user in online_users %}
                             <li class="list-group-item">{{ user.username }} - {{ user.last_activity }}</li>
@@ -105,6 +113,35 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Time filter functionality
+    const timeFilter = document.getElementById('timeFilter');
+    const onlineUsersList = document.getElementById('onlineUsersList');
+
+    function updateOnlineUsers(minutes) {
+        fetch(`/admin/online-users/${minutes}`)
+            .then(response => response.json())
+            .then(data => {
+                onlineUsersList.innerHTML = '';
+                if (data.users.length > 0) {
+                    data.users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = `${user.username} - ${user.last_activity}`;
+                        onlineUsersList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = 'No users online.';
+                    onlineUsersList.appendChild(li);
+                }
+            });
+    }
+
+    timeFilter.addEventListener('change', function() {
+        updateOnlineUsers(this.value);
+    });
+
     // Toggle user activation
     document.querySelectorAll('.toggle-activation').forEach(button => {
         button.addEventListener('click', function() {

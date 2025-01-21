@@ -2,80 +2,286 @@
 
 {% block title %}Review Mode - QuizMaster X{% endblock %}
 
-{% block content %}
-    <div class="quiz-container" id="review-mode"> <!- - Add id="review-mode" here -->
-    <div class="quiz-container"> <!- - Add quiz-container for consistent layout -->
-        <h1 class="results-title text-center mb-4">Review Mode</h1> <!- - Use results-title for consistent heading -->
-        {% if message %}
-            <p class="alert alert-info">{{ message }}</p>
-        {% else %}
-            <div id="question-container" class="mb-4"> <!- - Add mb-4 for spacing -->
-                <h2 class="quiz-question">{{ question.question_text }}</h2> <!- - Use quiz-question for consistent question styling -->
-            </div>
-            <div class="d-grid gap-2"> <!- - Use d-grid for layout -->
-                <button class="answer-button" onclick="checkAnswer('a', '{{ question.correct_answer }}', {{ question.question_id }})">A: {{ question.option_a }}</button>
-                <button class="answer-button" onclick="checkAnswer('b', '{{ question.correct_answer }}', {{ question.question_id }})">B: {{ question.option_b }}</button>
-                <button class="answer-button" onclick="checkAnswer('c', '{{ question.correct_answer }}', {{ question.question_id }})">C: {{ question.option_c }}</button>
-                <button class="answer-button" onclick="checkAnswer('d', '{{ question.correct_answer }}', {{ question.question_id }})">D: {{ question.option_d }}</button>
-                {% if question.option_e %}
-                    <button class="answer-button" onclick="checkAnswer('e', '{{ question.correct_answer }}', {{ question.question_id }})">E: {{ question.option_e }}</button>
-                {% endif %}
-            </div>
-            <div id="difficulty-selection" class="mt-4 text-center">
-                <p>How difficult was this question?</p>
-                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                    <button class="btn difficulty-button easy" onclick="submitReview('easy', {{ question.question_id }})">Easy</button>
-                    <button class="btn difficulty-button medium" onclick="submitReview('medium', {{ question.question_id }})">Medium</button>
-                    <button class="btn difficulty-button hard" onclick="submitReview('hard', {{ question.question_id }})">Hard</button>
-                    <button class="btn difficulty-button wrong" onclick="submitReview('wrong', {{ question.question_id }})">I was wrong</button>
-                </div>
-            </div>
-        {% endif %}
-    </div>
+{% block additional_head %}
+<style>
+    .quiz-container {
+        max-width: 800px;
+        margin: 80px auto;
+        padding: 2rem;
+        background-color: #1e1e1e;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .question-text {
+        font-family: 'Exo 2', sans-serif;
+        color: #66FCF1;
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        line-height: 1.4;
+    }
+
+    .options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .option-btn {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 1rem;
+        background-color: #2c3e50;
+        border: 1px solid #45A29E;
+        border-radius: 8px;
+        color: #f0f0f0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .option-letter {
+        background-color: rgba(102, 252, 241, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        margin-right: 1rem;
+        font-weight: bold;
+        color: #66FCF1;
+    }
+
+    .option-text {
+        flex-grow: 1;
+        text-align: left;
+    }
+
+    .feedback-icon {
+        position: absolute;
+        right: 1rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .option-btn:hover:not(:disabled) {
+        transform: translateX(5px);
+        background-color: #34495e;
+    }
+
+    .option-btn.correct {
+        background-color: rgba(40, 167, 69, 0.2);
+        border-color: #28a745;
+    }
+
+    .option-btn.correct .feedback-icon {
+        opacity: 1;
+        color: #28a745;
+    }
+
+    .option-btn.incorrect {
+        background-color: rgba(220, 53, 69, 0.2);
+        border-color: #dc3545;
+    }
+
+    .option-btn.incorrect .feedback-icon {
+        opacity: 1;
+        color: #dc3545;
+    }
+
+    .option-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    #difficulty-selection {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        animation: fadeIn 0.5s ease forwards;
+    }
+
+    #difficulty-selection p {
+        color: #66FCF1;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .difficulty-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .difficulty-btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .difficulty-btn.easy {
+        background-color: rgba(40, 167, 69, 0.2);
+        border: 1px solid #28a745;
+        color: #28a745;
+    }
+
+    .difficulty-btn.medium {
+        background-color: rgba(0, 123, 255, 0.2);
+        border: 1px solid #007bff;
+        color: #007bff;
+    }
+
+    .difficulty-btn.hard {
+        background-color: rgba(255, 193, 7, 0.2);
+        border: 1px solid #ffc107;
+        color: #ffc107;
+    }
+
+    .difficulty-btn.wrong {
+        background-color: rgba(220, 53, 69, 0.2);
+        border: 1px solid #dc3545;
+        color: #dc3545;
+    }
+
+    .difficulty-btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.2);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+        .quiz-container {
+            margin: 1rem;
+            padding: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+        }
+
+        .difficulty-buttons {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .difficulty-btn {
+            width: 100%;
+        }
+    }
+</style>
 {% endblock %}
 
-{% block extra_js %}
+{% block content %}
+<div class="quiz-container">
+    <h2 class="question-text">{{ question.question_text }}</h2>
+    <div class="options-container">
+        {% for option in [('a', question.option_a), ('b', question.option_b), ('c', question.option_c), ('d', question.option_d), ('e', question.option_e)] %}
+            {% if option[1] %}
+                <button class="option-btn" data-answer="{{ option[0] }}">
+                    <span class="option-letter">{{ option[0]|upper }}</span>
+                    <span class="option-text">{{ option[1] }}</span>
+                    <div class="feedback-icon"></div>
+                </button>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div id="difficulty-selection">
+        <p>How difficult was this question?</p>
+        <div class="difficulty-buttons">
+            <button class="difficulty-btn easy" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn medium" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn hard" data-difficulty="hard">Hard</button>
+            <button class="difficulty-btn wrong" data-difficulty="wrong">I was wrong</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-    let correctAnswerGlobal = '';
+document.addEventListener('DOMContentLoaded', function() {
+    const answerButtons = document.querySelectorAll('.option-btn');
+    const difficultySection = document.getElementById('difficulty-selection');
+    const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+    const correctAnswer = '{{ question.correct_answer }}'.toLowerCase();
+    const questionId = {{ question.question_id }};
 
-    function checkAnswer(selectedOption, correctAnswer, questionId) {
-        correctAnswerGlobal = correctAnswer.toLowerCase();
-        const options = document.querySelectorAll('.answer-button');
-        options.forEach(option => {
-            option.disabled = true;
-            option.onclick = null;
-            const optionLetter = option.textContent.charAt(0).toLowerCase();
-            if (optionLetter === correctAnswerGlobal) {
-                option.classList.add('correct');
-            }
-            if (optionLetter === selectedOption && selectedOption !== correctAnswerGlobal) {
-                option.classList.add('incorrect');
-            }
-        });
-        document.getElementById('difficulty-selection').style.display = 'flex';
+    function showFeedback(button, isCorrect) {
+        button.classList.add(isCorrect ? 'correct' : 'incorrect');
+        const icon = button.querySelector('.feedback-icon');
+        icon.innerHTML = isCorrect ? 
+            '<i class="fas fa-check"></i>' : 
+            '<i class="fas fa-times"></i>';
     }
 
-    function submitReview(difficulty, questionId) {
-        fetch('/review/submit_review', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                question_id: questionId,
-                difficulty: difficulty
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                setTimeout(() => {
-                    window.location.href = '/review';
-                }, 1000);
-            } else {
-                alert('Error submitting review.');
-            }
+    answerButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const selectedAnswer = this.dataset.answer;
+
+            // Disable all buttons
+            answerButtons.forEach(btn => {
+                btn.disabled = true;
+                if (btn !== this) {
+                    btn.classList.add('disabled');
+                }
+            });
+
+            // Show feedback
+            answerButtons.forEach(btn => {
+                const buttonAnswer = btn.dataset.answer;
+                if (buttonAnswer === correctAnswer) {
+                    showFeedback(btn, true);
+                } else if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                    showFeedback(btn, false);
+                }
+            });
+
+            // Show difficulty selection
+            difficultySection.style.display = 'flex';
         });
-    }
+    });
+
+    difficultyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const difficulty = this.dataset.difficulty;
+            
+            // Disable all difficulty buttons
+            difficultyButtons.forEach(btn => btn.disabled = true);
+            
+            fetch('/review/submit_review', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question_id: questionId,
+                    difficulty: difficulty
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.href = '/review';
+                    }, 1000);
+                } else {
+                    alert('Error submitting review.');
+                    difficultyButtons.forEach(btn => btn.disabled = false);
+                }
+            });
+        });
+    });
+});
 </script>
 {% endblock %}

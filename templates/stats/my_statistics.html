@@ -3,33 +3,71 @@
 {% block title %}My Statistics - QuizMaster X{% endblock %}
 
 {% block additional_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<!-- Load Chart.js first -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Load the plugin after Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
 <style>
     .stats-card {
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        padding: 20px;
-        margin-bottom: 20px;
+        background: rgba(33, 37, 41, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        padding: 25px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .weak-topic {
-        background: #ffe0e0;
-        padding: 10px;
-        margin: 5px 0;
-        border-radius: 5px;
+        background: rgba(220, 53, 69, 0.15);
+        padding: 15px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border-left: 4px solid #dc3545;
     }
     .progress {
         height: 20px;
         margin: 10px 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
     }
     .chart-container {
         position: relative;
-        height: 300px;
-        margin-bottom: 20px;
+        height: 350px;
+        margin-bottom: 25px;
+        background: rgba(33, 37, 41, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .mini-chart {
         height: 200px;
+        margin: 10px 0;
+    }
+    .stats-card h4 {
+        color: #fff;
+        margin-bottom: 20px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+    }
+    .stats-card h5 {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .stats-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #4e73df;
+        margin: 10px 0;
+        text-shadow: 0 0 10px rgba(78, 115, 223, 0.3);
+    }
+    .table {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .table thead th {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    .table td {
+        border-color: rgba(255, 255, 255, 0.1);
     }
 </style>
 {% endblock %}
@@ -167,215 +205,335 @@
     </div>
 </div>
 
-<script>
+<script type="text/javascript">
 document.addEventListener('DOMContentLoaded', function() {
-    Chart.register(ChartDataLabels);
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js failed to load');
+        return;
+    }
 
-    // Questions Distribution Chart
-    const questionsChart = new Chart(document.getElementById('questionsChart').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Correct', 'Incorrect'],
-            datasets: [{
-                data: [
-                    {{ topic_stats|sum(attribute='correct_answers') }},
-                    {{ topic_stats|sum(attribute='total_questions') - topic_stats|sum(attribute='correct_answers') }}
-                ],
-                backgroundColor: ['#28a745', '#dc3545']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
+    try {
+        // Register the plugin
+        Chart.register(ChartDataLabels);
+        
+        // Set default configurations for all charts
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.8)';
+        Chart.defaults.font.family = "'Exo 2', 'Segoe UI', sans-serif";
+        Chart.defaults.font.size = 12;
+        Chart.defaults.plugins.legend.position = 'bottom';
+        Chart.defaults.plugins.legend.labels.color = 'rgba(255, 255, 255, 0.8)';
+        Chart.defaults.plugins.datalabels.color = 'rgba(255, 255, 255, 0.9)';
+        Chart.defaults.plugins.datalabels.font.weight = 'bold';
+        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.1)';
+        Chart.defaults.scale.ticks.color = 'rgba(255, 255, 255, 0.7)';
 
-    // Accuracy Pie Chart
-    const accuracyPieChart = new Chart(document.getElementById('accuracyPieChart').getContext('2d'), {
-        type: 'pie',
-        data: {
-            labels: ['Correct', 'Incorrect'],
-            datasets: [{
-                data: [{{ avg_accuracy }}, {{ 100 - avg_accuracy }}],
-                backgroundColor: ['#28a745', '#dc3545']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
+        // Custom color palette
+        const colors = {
+            primary: '#4e73df',
+            success: '#1cc88a',
+            info: '#36b9cc',
+            warning: '#f6c23e',
+            danger: '#e74a3b',
+            secondary: '#858796',
+            light: '#f8f9fc',
+            dark: '#5a5c69'
+        };
 
-    // Topics Donut Chart
-    const topicsDonutChart = new Chart(document.getElementById('topicsDonutChart').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: {{ topic_stats|map(attribute='topic')|list|tojson }},
-            datasets: [{
-                data: {{ topic_stats|map(attribute='total_questions')|list|tojson }},
-                backgroundColor: [
-                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
-                    '#858796', '#5a5c69', '#2c9faf', '#3c5a9a', '#e83e8c'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-
-    // Topic Performance Chart
-    const topicChart = new Chart(document.getElementById('topicChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: {{ topic_stats|map(attribute='topic')|list|tojson }},
-            datasets: [{
-                label: 'Accuracy (%)',
-                data: {{ topic_stats|map(attribute='accuracy')|list|tojson }},
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
+        // Questions Distribution Chart
+        const questionsChart = new Chart(document.getElementById('questionsChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Correct', 'Incorrect'],
+                datasets: [{
+                    data: [
+                        {{ topic_stats|sum(attribute='correct_answers') }},
+                        {{ topic_stats|sum(attribute='total_questions') - topic_stats|sum(attribute='correct_answers') }}
+                    ],
+                    backgroundColor: [
+                        'rgba(28, 200, 138, 0.8)',
+                        'rgba(231, 74, 59, 0.8)'
+                    ],
+                    borderColor: [
+                        colors.success,
+                        colors.danger
+                    ],
+                    borderWidth: 2
+                }]
             },
-            plugins: {
-                datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    formatter: Math.round
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            let percentage = (value * 100 / sum).toFixed(1) + "%";
+                            return percentage;
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        }
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Performance Trends Chart
-    const trendsChart = new Chart(document.getElementById('trendsChart').getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: {{ recent_quizzes|map(attribute='quiz_date')|list|tojson }},
-            datasets: [{
-                label: 'Score %',
-                data: {{ recent_quizzes|map(attribute='score_percentage')|list|tojson }},
-                borderColor: 'rgba(75, 192, 192, 1)',
-                tension: 0.1,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
+        // Accuracy Pie Chart
+        const accuracyPieChart = new Chart(document.getElementById('accuracyPieChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['Correct', 'Incorrect'],
+                datasets: [{
+                    data: [{{ avg_accuracy }}, {{ 100 - avg_accuracy }}],
+                    backgroundColor: ['#28a745', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Weakness Chart
-    const weaknessChart = new Chart(document.getElementById('weaknessChart').getContext('2d'), {
-        type: 'radar',
-        data: {
-            labels: {{ weak_topics|map(attribute='topic')|list|tojson }},
-            datasets: [{
-                label: 'Weakness Score',
-                data: {{ weak_topics|map(attribute='weakness_score')|list|tojson }},
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 1
+        // Topics Donut Chart
+        const topicsDonutChart = new Chart(document.getElementById('topicsDonutChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ topic_stats|map(attribute='topic')|list|tojson }},
+                datasets: [{
+                    data: {{ topic_stats|map(attribute='total_questions')|list|tojson }},
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                        '#858796', '#5a5c69', '#2c9faf', '#3c5a9a', '#e83e8c'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Quiz History Chart
-    const historyChart = new Chart(document.getElementById('historyChart').getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: {{ recent_quizzes|map(attribute='quiz_date')|list|tojson }},
-            datasets: [{
-                label: 'Score %',
-                data: {{ recent_quizzes|map(attribute='score_percentage')|list|tojson }},
-                borderColor: 'rgba(75, 192, 192, 1)',
-                tension: 0.1,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
+        // Topic Performance Chart
+        const topicChart = new Chart(document.getElementById('topicChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ topic_stats|map(attribute='topic')|list|tojson }},
+                datasets: [{
+                    label: 'Accuracy (%)',
+                    data: {{ topic_stats|map(attribute='accuracy')|list|tojson }},
+                    backgroundColor: 'rgba(78, 115, 223, 0.8)',
+                    borderColor: colors.primary,
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: value => value.toFixed(1) + '%',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Daily Progress Chart
-    const dailyProgressChart = new Chart(document.getElementById('dailyProgressChart').getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: {{ daily_stats|map(attribute='date')|list|tojson }},
-            datasets: [{
-                label: 'Questions Attempted',
-                data: {{ daily_stats|map(attribute='questions_attempted')|list|tojson }},
-                borderColor: 'rgba(75, 192, 192, 1)',
-                tension: 0.1,
-                fill: false
-            }, {
-                label: 'Questions Correct',
-                data: {{ daily_stats|map(attribute='questions_correct')|list|tojson }},
-                borderColor: 'rgba(54, 162, 235, 1)',
-                tension: 0.1,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
+        // Performance Trends Chart
+        const trendsChart = new Chart(document.getElementById('trendsChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ recent_quizzes|map(attribute='quiz_date')|list|tojson }},
+                datasets: [{
+                    label: 'Score %',
+                    data: {{ recent_quizzes|map(attribute='score_percentage')|list|tojson }},
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
                 }
             }
-        }
-    });
+        });
+
+        // Weakness Chart
+        const weaknessChart = new Chart(document.getElementById('weaknessChart').getContext('2d'), {
+            type: 'radar',
+            data: {
+                labels: {{ weak_topics|map(attribute='topic')|list|tojson }},
+                datasets: [{
+                    label: 'Areas for Improvement',
+                    data: {{ weak_topics|map(attribute='weakness_score')|list|tojson }},
+                    backgroundColor: 'rgba(231, 74, 59, 0.2)',
+                    borderColor: colors.danger,
+                    borderWidth: 2,
+                    pointBackgroundColor: colors.danger,
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: colors.danger
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            backdropColor: 'transparent'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        angleLines: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Quiz History Chart
+        const historyChart = new Chart(document.getElementById('historyChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ recent_quizzes|map(attribute='quiz_date')|list|tojson }},
+                datasets: [{
+                    label: 'Score %',
+                    data: {{ recent_quizzes|map(attribute='score_percentage')|list|tojson }},
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // Daily Progress Chart
+        const dailyProgressChart = new Chart(document.getElementById('dailyProgressChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ daily_stats|map(attribute='date')|list|tojson }},
+                datasets: [{
+                    label: 'Questions Attempted',
+                    data: {{ daily_stats|map(attribute='questions_attempted')|list|tojson }},
+                    borderColor: colors.primary,
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Questions Correct',
+                    data: {{ daily_stats|map(attribute='questions_correct')|list|tojson }},
+                    borderColor: colors.success,
+                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    datalabels: {
+                        display: false
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+        console.error(error.stack);
+    }
 });
 </script>
 {% endblock %} 

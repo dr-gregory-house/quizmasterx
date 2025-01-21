@@ -13,8 +13,8 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
-    pointer-events: none; /* Keep this to allow interaction with elements above */
+    z-index: -11;
+    pointer-events: none;
 }
 
 .navbar {
@@ -71,17 +71,21 @@ main.container {
 .homepage-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 80px); /* Adjust height for navbar */
+    min-height: calc(100vh - 80px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding-top: 80px;
 }
 
 .content-area {
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 2;
+    pointer-events: auto;
+    position: relative;
 }
 
 /* Homepage Specific Styles */
@@ -102,6 +106,9 @@ main.container {
     overflow-x: auto;
     gap: 20px;
     padding-bottom: 20px;
+    z-index: 3;
+    position: relative;
+    pointer-events: auto;
 }
 
 .mode-card {
@@ -112,7 +119,13 @@ main.container {
     text-align: center;
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    flex: 0 0 auto; /* Don't shrink, don't grow, base size */
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 1000;
+    pointer-events: auto;
+    display: block;
+    text-decoration: none;
+    color: inherit;
 }
 
 .mode-card i {
@@ -135,6 +148,8 @@ main.container {
 .mode-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    text-decoration: none;
+    color: inherit;
 }
 
 /* Authentication Pages */
@@ -236,12 +251,12 @@ footer .credits {
 .homepage-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 80px); /* Adjust for navbar height */
+    min-height: calc(100vh - 80px);
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    padding-top: 80px; /* Adjust padding to account for fixed navbar */
+    justify-content: center;
+    padding-top: 80px;
 }
 
 .content-area {
@@ -271,68 +286,53 @@ main.container::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%2345A29E' opacity='0.2' d='M0 100V0l50 50L0 100zM50 0l50 50L50 100V0z'/%3E%3C/svg%3E");
     opacity: 0.4;
     z-index: 0;
+    pointer-events: none;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
+    .homepage-container {
+        min-height: calc(100vh - 60px);
+        padding-top: 100px;
+        padding-bottom: 20px;
+        justify-content: flex-start;
+    }
+
+    #welcome-message {
+        margin-bottom: 2rem;
+    }
+
+    #welcome-message h1 {
+        font-size: 2rem;
+        margin-top: 1rem;
+    }
+
     #feature-selection {
         flex-direction: column;
-        overflow-x: hidden;
-        align-items: center;
-        gap: 20px; /* Slightly increased gap */
-        padding: 20px; /* Added padding around the container */
-    }
-
-    .mode-card {
-        width: 90%; /* Take up a bit less width with some side margin */
+        padding: 0 1rem;
+        width: 100%;
         max-width: 400px;
-        margin-right: 0;
-        margin-bottom: 10px; /* Add bottom margin for visual separation */
-        border-radius: 12px; /* More rounded corners */
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Smooth transitions */
     }
 
-    .mode-card:hover,
-    .mode-card:focus {
-        transform: scale(1.03); /* Slight scale up on hover/focus */
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* More pronounced shadow */
-    }
-
-    /* Entrance Animation */
     .mode-card {
-        opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInUp 0.5s ease-out forwards;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .homepage-container {
+        padding-top: 80px;
     }
 
-    @keyframes fadeInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    #welcome-message h1 {
+        font-size: 1.8rem;
+        padding: 0 1rem;
+        text-align: center;
     }
 
-    /* Style the icons */
-    .mode-card i {
-        font-size: 2.5rem; /* Slightly larger icons */
-        margin-bottom: 15px;
-        transition: color 0.3s ease-in-out;
-    }
-
-    .mode-card:hover i,
-    .mode-card:focus i {
-        color: #80fff7; /* Lighter color on hover */
-    }
-
-    /* Improve text readability */
-    .mode-card h2 {
-        font-size: 1.3rem;
-        margin-bottom: 8px;
-    }
-
-    .mode-card p {
+    #welcome-message p {
         font-size: 1rem;
-        color: #ccc; /* Keep text subtle */
+        text-align: center;
     }
 }
 
@@ -344,8 +344,29 @@ main.container::before {
     background-color: #1e1e1e;
     border-radius: 20px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    position: relative; /* Add this */
-    z-index: 1; /* And this, to be above particles */
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .quiz-container {
+        margin: 60px auto 20px;
+        padding: 15px;
+        width: 90%;
+    }
+
+    .question-text {
+        margin-top: 20px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .quiz-container {
+        margin: 70px 10px 20px;
+        width: auto;
+        border-radius: 15px;
+    }
 }
 
 /* Apply Lato font to questions */
@@ -651,7 +672,7 @@ main.container::before {
 
 #difficulty-selection button[onclick*="hard"] {
     border-color: #ffc107; /* Yellow for Hard */
-    color: #white; /* Keep text dark for contrast */
+    color: #fff; /* Keep text light for contrast */
 }
 
 #difficulty-selection button[onclick*="hard"]:hover {

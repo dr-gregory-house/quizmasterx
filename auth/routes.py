@@ -21,11 +21,11 @@ def register():
             return render_template('auth/register.html', username=username)
         hashed_password = generate_password_hash(password)
         try:
-            cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, hashed_password))
+            cursor.execute('INSERT INTO users (username, password_hash, is_active) VALUES (?, ?, 0)', (username, hashed_password))
             conn.commit()
             conn.close()
-            flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('auth.login'))
+            flash('Registration successful! Your account needs to be activated by an administrator.', 'success')
+            return redirect(url_for('auth.contact_admin'))
         except Exception as e:
             conn.close()
             flash(f'An error occurred during registration. Please try again.', 'error')
@@ -49,10 +49,14 @@ def login():
                 return redirect(url_for('main.hello'))
             else:
                 flash('Your account is inactive. Please contact the administrator.', 'warning')
-                return render_template('auth/login.html')  # Correct redirect here
+                return redirect(url_for('auth.contact_admin'))
         else:
             flash('Login failed. Check your credentials.', 'error')
     return render_template('auth/login.html')
+
+@auth_bp.route('/contact-admin')
+def contact_admin():
+    return render_template('auth/contact_admin.html')
 
 @auth_bp.route('/logout')
 def logout():

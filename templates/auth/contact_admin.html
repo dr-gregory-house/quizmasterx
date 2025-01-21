@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Administrator{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-info-circle"></i> Account Activation Required</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-clock fa-4x text-primary mb-3"></i>
+                        <h4 class="text-primary">Thank you for registering with QuizMasterX!</h4>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <h5 class="alert-heading"><i class="fas fa-exclamation-circle"></i> Important Information</h5>
+                        <p>Your account has been created successfully but requires administrator activation before you can access the system. This is to ensure the security and quality of our quiz platform.</p>
+                    </div>
+
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-steps"></i> Next Steps</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol class="mb-0">
+                                <li class="mb-2">Contact our administrator through one of these methods:
+                                    <ul class="mt-2">
+                                        <li class="mb-2">
+                                            <strong>WhatsApp:</strong> 
+                                            <a href="https://wa.me/+79964683147" target="_blank" class="btn btn-success btn-sm">
+                                                <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <strong>Direct WhatsApp Number:</strong> +79964683147
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="mb-2">Provide your registered username when contacting the administrator</li>
+                                <li class="mb-2">Wait for confirmation (usually within 5 min )</li>
+                                <li>Once activated, you can log in and start using all features</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-clock"></i> Processing Time</h6>
+                        <p class="mb-0">Account activation typically takes 5 - 15 minutes. I appreciate your patience.</p>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-2">
+                            <i class="fas fa-sign-in-alt"></i> Return to Login
+                        </a>
+                        <a href="{{ url_for('main.hello') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home"></i> Go to Homepage
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .card {
+        border-radius: 15px;
+    }
+    .card-header {
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+    .btn {
+        border-radius: 25px;
+        padding: 8px 20px;
+    }
+    .alert {
+        border-radius: 10px;
+    }
+</style>
+{% endblock %} 

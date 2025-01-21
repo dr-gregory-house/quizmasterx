@@ -114,15 +114,10 @@ def next_question():
     selected_answer = request.form.get('selected_answer')
     quiz_session_id = session.get('quiz_session_id')
     
-    print(f"\n=== NEXT QUESTION DEBUG ===")
-    print(f"Selected Answer: {selected_answer}")
-    print(f"Quiz Session ID: {quiz_session_id}")
-    
     if not quiz_session_id:
-        print("Error: Invalid quiz state.")
-        flash("Error: Invalid quiz state.", "error")
-        return redirect(url_for('main.hello'))
-    
+        flash('Invalid quiz state.', 'error')
+        return redirect(url_for('quiz.start_quiz'))
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -131,34 +126,30 @@ def next_question():
     quiz_session = cursor.fetchone()
     
     if not quiz_session:
-        print("Error: Quiz session not found.")
+        flash('Quiz session not found.', 'error')
         conn.close()
-        flash("Error: Quiz session not found.", "error")
-        return redirect(url_for('main.hello'))
+        return redirect(url_for('quiz.start_quiz'))
     
     questions = json.loads(quiz_session['questions'])
     current_index = quiz_session['current_index']
     correct_answers = quiz_session['correct_answers']
     user_id = quiz_session['user_id']
     
-    # Check current answer if provided
+    # Process the answer for the current question
     if selected_answer:
         cursor.execute('SELECT correct_answer FROM questions WHERE question_id = ?', (questions[current_index],))
         question = cursor.fetchone()
-        is_correct = False
-        if question and selected_answer.lower() == question['correct_answer'].lower():
+        correct_answer = question['correct_answer'].lower()
+        is_correct = selected_answer.lower() == correct_answer
+
+        if is_correct:
             correct_answers += 1
-            is_correct = True
             cursor.execute('UPDATE quiz_sessions SET correct_answers = ? WHERE session_id = ?', 
                          (correct_answers, quiz_session_id))
-        
-        if not is_correct:
-            print(f"\nIncorrect answer for question {questions[current_index]} - updating SM2 data")
+        else:
+            # Update SM2 data for incorrect answers
             now = datetime.now()
             next_practice = now + timedelta(minutes=1)
-            print(f"Setting next practice date to: {next_practice}")
-            
-            # Update SM2 data for wrong answers
             cursor.execute("""
                 INSERT INTO sm2_data 
                 (user_id, question_id, easiness_factor, repetitions, interval, next_practice_date) 
@@ -169,43 +160,76 @@ def next_question():
                     interval = 1,
                     next_practice_date = ?
             """, (user_id, questions[current_index], next_practice, next_practice))
-            
-            # Verify SM2 data
-            cursor.execute("SELECT * FROM sm2_data WHERE user_id = ? AND question_id = ?", 
-                         (user_id, questions[current_index]))
-            sm2_data = cursor.fetchone()
-            if sm2_data:
-                print("\nSM2 data after update:")
-                print(f"Next Practice Date: {sm2_data['next_practice_date']}")
-                print(f"Interval: {sm2_data['interval']}")
-                print(f"Repetitions: {sm2_data['repetitions']}")
+        
+        # Update statistics
+        try:
+            cursor.execute("""
+                INSERT INTO user_topic_stats (user_id, topic, total_questions, correct_answers, last_attempt_date)
+                VALUES (?, ?, 1, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, topic) DO UPDATE SET
+                    total_questions = total_questions + 1,
+                    correct_answers = CASE WHEN ? THEN correct_answers + 1 ELSE correct_answers END,
+                    last_attempt_date = CURRENT_TIMESTAMP
+            """, (user_id, question['topic'], 1 if is_correct else 0, is_correct))
+
+            # Update weakness score
+            if not is_correct:
+                cursor.execute("""
+                    INSERT INTO user_weak_topics (user_id, topic, weakness_score, last_updated)
+                    VALUES (?, ?, 0.8, CURRENT_TIMESTAMP)
+                    ON CONFLICT(user_id, topic) DO UPDATE SET
+                        weakness_score = MIN(1.0, (user_weak_topics.weakness_score + 0.1)),
+                        last_updated = CURRENT_TIMESTAMP
+                """, (user_id, question['topic']))
             else:
-                print("Warning: SM2 data not found after insert/update")
-    
+                cursor.execute("""
+                    INSERT INTO user_weak_topics (user_id, topic, weakness_score, last_updated)
+                    VALUES (?, ?, 0.4, CURRENT_TIMESTAMP)
+                    ON CONFLICT(user_id, topic) DO UPDATE SET
+                        weakness_score = MAX(0.0, (user_weak_topics.weakness_score - 0.05)),
+                        last_updated = CURRENT_TIMESTAMP
+                """, (user_id, question['topic']))
+
+            # Update daily statistics
+            today = datetime.now().date()
+            cursor.execute("""
+                INSERT INTO user_daily_stats (user_id, date, questions_attempted, questions_correct)
+                VALUES (?, ?, 1, ?)
+                ON CONFLICT(user_id, date) DO UPDATE SET
+                    questions_attempted = questions_attempted + 1,
+                    questions_correct = CASE WHEN ? THEN questions_correct + 1 ELSE questions_correct END
+            """, (user_id, today, 1 if is_correct else 0, is_correct))
+
+            cursor.execute('UPDATE quiz_sessions SET current_index = ? WHERE session_id = ?', 
+                          (current_index + 1, quiz_session_id))
+        except Exception as e:
+            flash('An error occurred while updating statistics.', 'error')
+
     # Move to next question
     current_index += 1
+    
+    # Update quiz session
     cursor.execute('UPDATE quiz_sessions SET current_index = ? WHERE session_id = ?', 
                   (current_index, quiz_session_id))
     
-    if current_index < len(questions):
-        # Get next question data
-        cursor.execute('SELECT * FROM questions WHERE question_id = ?', (questions[current_index],))
-        next_question_data = cursor.fetchone()
-        conn.commit()
-        conn.close()
-        print("=== END NEXT QUESTION DEBUG ===\n")
-        return render_template('quiz/quiz_question.html', 
-                             question=next_question_data,
-                             next_question_url=url_for('quiz.next_question'),
-                             current_question=current_index + 1,
-                             total_questions=len(questions))
-    else:
-        # Quiz completed, clean up
+    # Check if quiz is complete
+    if current_index >= len(questions):
         cursor.execute('DELETE FROM quiz_sessions WHERE session_id = ?', (quiz_session_id,))
         conn.commit()
         conn.close()
-        print("=== END NEXT QUESTION DEBUG ===\n")
         return redirect(url_for('quiz.quiz_results', score=correct_answers, total=len(questions)))
+
+    # Get next question data
+    cursor.execute('SELECT * FROM questions WHERE question_id = ?', (questions[current_index],))
+    next_question_data = cursor.fetchone()
+    conn.commit()
+    conn.close()
+
+    return render_template('quiz/quiz_question.html', 
+                         question=next_question_data,
+                         next_question_url=url_for('quiz.next_question'),
+                         current_question=current_index + 1,
+                         total_questions=len(questions))
 
 @quiz_bp.route('/quiz_results')
 @login_required

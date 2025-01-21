@@ -1,6 +1,6 @@
 # review/routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
-from utils import get_db_connection
+from utils import get_db_connection, get_review_questions_count, get_next_review_question
 from datetime import datetime, timedelta
 from functools import wraps
 
@@ -19,68 +19,23 @@ def login_required(f):
 @login_required
 def review_mode():
     user_id = session.get('user_id')
-    print(f"\n=== REVIEW MODE DEBUG ===")
-    print(f"User ID: {user_id}")
-    
     if not user_id:
-        print("No user_id found in session")
-        flash('User not logged in.', 'error')
         return redirect(url_for('auth.login'))
-        
-    conn = get_db_connection()
-    cursor = conn.cursor()
+
     now = datetime.now()
-    print(f"Current time: {now}")
     
-    # First check if there are any questions to review
-    cursor.execute("""
-        SELECT COUNT(*) as count
-        FROM sm2_data sm
-        WHERE sm.user_id = ? AND sm.next_practice_date <= ?
-    """, (user_id, now))
-    count = cursor.fetchone()['count']
-    print(f"Number of questions due for review: {count}")
-    
+    # Get count of questions due for review
+    count = get_review_questions_count(user_id)
     if count == 0:
-        print("No questions found for review")
-        conn.close()
-        return render_template('review/review.html', message="No questions to review at this time. Questions will appear here after you answer them in Quiz mode.")
-    
-    # Debug: Let's see what's in sm2_data for this user
-    cursor.execute("""
-        SELECT question_id, next_practice_date, interval
-        FROM sm2_data
-        WHERE user_id = ?
-    """, (user_id,))
-    sm2_entries = cursor.fetchall()
-    print("\nAll SM2 entries for user:")
-    for entry in sm2_entries:
-        print(f"Question ID: {entry['question_id']}, Next Practice: {entry['next_practice_date']}, Interval: {entry['interval']}")
-        
-    cursor.execute("""
-        SELECT q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.option_e, q.correct_answer, q.question_id,
-               sm.next_practice_date
-        FROM questions q
-        JOIN sm2_data sm ON q.question_id = sm.question_id
-        WHERE sm.user_id = ? AND sm.next_practice_date <= ?
-        ORDER BY sm.next_practice_date
-        LIMIT 1
-    """, (user_id, now))
-    question = cursor.fetchone()
-    print("\nRetrieved question:")
-    if question:
-        print(f"Question ID: {question['question_id']}")
-        print(f"Question Text: {question['question_text']}")
-        print(f"Next Practice Date: {question['next_practice_date']}")
-    else:
-        print("No question retrieved")
-    
-    conn.close()
-    print("=== END REVIEW MODE DEBUG ===\n")
-    
+        flash('No questions are due for review at this time.', 'info')
+        return redirect(url_for('main.index'))
+
+    # Get the next question due for review
+    question = get_next_review_question(user_id)
     if not question:
-        return render_template('review/review.html', message="No questions available for review at this moment.")
-        
+        flash('No questions available for review at this time.', 'info')
+        return redirect(url_for('main.index'))
+
     return render_template('review/review.html', question=question)
 
 @review_bp.route('/submit_review', methods=['POST'])
